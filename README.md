@@ -1,2 +1,2 @@
 # CMM
-Programas padrões para CMM
+Programas de backup dos condominios com CMM instalados
