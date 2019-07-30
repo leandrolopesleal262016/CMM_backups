@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 
 # CMM Oficial com placa de expansão da BRAVAS Technololgy
-# Desenvolvido por Leandro Leal  rev. 06/06/2019
+# Desenvolvido por Leandro Leal  rev. 30/07/2019
 
 import RPi.GPIO as GPIO
 import time
@@ -388,8 +388,9 @@ def Portoes_sociais(Rele): # Programa
             if saida == 1:
 
                 print ("Abrindo pelo botão de saida")
-                Intertravamento("abre_social")
                 os.system("mpg123 /home/pi/CMM/mp3/ate_logo.mp3")
+                Intertravamento("abre_social")
+                
                 
                 saida = 0
 
@@ -436,7 +437,7 @@ class Abre(Rele): # classe abertura dos portoes registrando no arquivo de contro
 def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe Rele
 
     sys.stdout.write("\nPrograma Garagem 1 em execução na thread\n")
-
+    
     s = Expansor()
 
     s.desliga_rele4_exp1() # Garante que a sirene esteja desligada
@@ -587,6 +588,8 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                             print("Portão Garagem fechou")
 
+                            time.sleep(2)
+
 ##                            evento.enviar("R","133","013")
 
                             # Envia o evento de fechamento para a central
@@ -729,7 +732,7 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
                         print("Portão Subsolo fechou")
                         cont = 0
                         mudanca2 = 0
-                        time.sleep(1)
+                        time.sleep(2)
                         break
             
         if pmg2 == 0 and mudanca2 == 0 and tx2 == 0: # Violação do portão da garagem
