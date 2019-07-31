@@ -692,7 +692,7 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
                         # Envia evento de portão aberto
                         cont = 0
                         break
-        time.sleep(0.1)
+        time.sleep(0.2)
         
 def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe Rele
 
@@ -947,7 +947,7 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
                         # Envia evento de portão aberto
                         cont = 0
                         break     
-        time.sleep(0.1)
+        time.sleep(0.2)
         
 def Arrombamento(Rele): # Inicia a thread arrombamento de portões
     
