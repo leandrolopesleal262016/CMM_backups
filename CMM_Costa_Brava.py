@@ -440,9 +440,13 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
     
     s = Expansor()
 
+    time.sleep(0.1)
     s.desliga_rele4_exp1() # Garante que a sirene esteja desligada
+    time.sleep(0.1)
     s.desliga_rele1_exp1() # Garante que o Abre esteja desligado
+    time.sleep(0.1)
     s.desliga_rele2_exp1() # Garante que o Foto esteja desligado
+    time.sleep(0.1)
     
     mudanca1 = 0
     
@@ -452,9 +456,13 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
         s = Expansor()
 
         pmg1 = l.leitor1_in1() # Ponto magnetico portão leitor 1 entrada 1
+        time.sleep(0.1)
         bar1 = l.leitor1_in2()  # Barreira próxima ao portão
+        time.sleep(0.1)
         tx1 =  l.leitor1_in3()  # Cantato abre vindo do TX (LINEAR HCS)
+        time.sleep(0.1)
         mud1 = l.leitor1_in4()  # Chave de mudança
+        time.sleep(0.1)
         
 
         if mud1 == 1 and mudanca1 == 0: # Chave de mudança acionada
@@ -513,7 +521,28 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
             pmg1 = l.leitor1_in1()
             tx1 =  l.leitor1_in3()
 
-            if pmg1 == 0 and tx1 == 0: # Verifica novamente para evitar ruidos            
+            cont = 5
+            violacao = 1
+            
+            while cont >0:
+
+                pmg1 = l.leitor1_in1()
+
+                if pmg1 == 0:
+                    time.sleep(0.2)
+                    cont = cont - 1
+
+                if pmg1 == 1:
+                    
+                    violacao = 0
+
+            if violacao == 0:
+
+                print("Filtrou ruido garagem")
+
+            if violacao == 1:
+
+##            if pmg1 == 0:
 
                 print("violação do portão garagem 001")
 ##                os.system("mpg123 /home/pi/CMM/mp3/violacao_garagem.mp3")
@@ -543,9 +572,11 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
                         
                         s.desliga_rele4_exp1() # Desliga sirene
                         
-                        break
-                    
+                        break            
+                
                 s.desliga_rele4_exp1() # Desliga sirene
+
+##                violacao = 0
                 
                 time.sleep(5)
         
@@ -669,9 +700,13 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
 
     s2 = Expansor()
 
-    s2.desliga_rele4_exp7() # Garante que a sirene esteja desligada        
+    time.sleep(0.1)
+    s2.desliga_rele4_exp7() # Garante que a sirene esteja desligada
+    time.sleep(0.1)
     s2.desliga_rele1_exp7() # Garante que o Abre esteja desligado
-    s2.desliga_rele2_exp7() # Garante que o Foto esteja desligado    
+    time.sleep(0.1)
+    s2.desliga_rele2_exp7() # Garante que o Foto esteja desligado
+    time.sleep(0.1)
 
     mudanca2 = 0
     
@@ -680,9 +715,13 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
         l2 = Leitor() # inicia a classe para leitura das entradas dos modulos expansores 
         s2 = Expansor()
 
+        time.sleep(0.1)
         pmg2 = l2.leitor7_in1() # Ponto magnetico portão leitor 1 entrada 1
+        time.sleep(0.1)
         bar2 = l2.leitor7_in2()  # Barreira próxima ao portão
+        time.sleep(0.1)
         tx2 =  l2.leitor7_in3()  # Cantato abre vindo do TX (LINEAR HCS)
+        time.sleep(0.1)
         mud2 = l2.leitor7_in4()  # Chave de mudança
 
         if mud2 == 1 and mudanca2 == 0: # Chave de mudança acionada
@@ -737,11 +776,32 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
             
         if pmg2 == 0 and mudanca2 == 0 and tx2 == 0: # Violação do portão da garagem
 
-            time.sleep(0.2) # Filtro
+            time.sleep(0.2) 
             pmg2 = l2.leitor7_in1()
             tx2 =  l2.leitor7_in3()
 
-            if pmg2 == 0 and tx2 == 0:
+            cont = 5
+            violacao = 1
+            
+            while cont >0: # Filtro
+
+                pmg2 = l2.leitor7_in1()
+
+                if pmg2 == 0:
+                    time.sleep(0.2)
+                    cont = cont - 1
+
+                if pmg2 == 1:
+                    
+                    violacao = 0
+
+            if violacao == 0:
+
+                print("Filtrou ruido Subsolo")
+
+            if violacao == 1:
+
+##            if pmg2 == 0:
 
                 print("violação do portão Subsolo")
 ##                os.system("mpg123 /home/pi/CMM/mp3/violacao_garagem.mp3")
@@ -774,6 +834,7 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
                         break
                     
                 s2.desliga_rele4_exp7() # Desliga sirene
+##                violacao = 0
                 
                 time.sleep(5)
         
@@ -1586,7 +1647,7 @@ def Buffer():
                                 
                 except Exception as err:
                     
-                    print("Não conseguiu enviar o evento, sem conexão no momento")
+                    print("Não conseguiu enviar o evento, sem conexão no momento",err)
                     s.close()
 
                     time.sleep(10)
