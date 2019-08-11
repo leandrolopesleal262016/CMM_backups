@@ -81,7 +81,6 @@ class Qrcode(Rele,Evento,Notifica,Banco):
         try:
 
             socket.setdefaulttimeout(99999999)
-
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_address = (self.ip_qrcode, 5001) # PORTA PADRAO DO LEITOR DE QR CODE
             time.sleep(0.1)
@@ -102,7 +101,6 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                 try: 
 
                     tamanho = 0
-
                     dados = sock.recv(128)
                     tamanho += len(dados)
 
@@ -133,7 +131,7 @@ class Qrcode(Rele,Evento,Notifica,Banco):
 
                                 self.id_raiz = id_raiz
                                 
-                                try:  # Tenta conectar com o banco de dados
+                                try:
 
                                     cnx = mysql.connector.connect(user='leandro',database='CMM', password='5510',host='localhost')
                                     cursor = cnx.cursor()
@@ -142,16 +140,10 @@ class Qrcode(Rele,Evento,Notifica,Banco):
 
                                     print("Opa, problema com o banco de dados",err)                                                                              
                                     print(err)
-
-                                    arquivo = open("QR_Code.log", "a+") # Escreve o evento no registro de log
-                                    arquivo.write("Data: " + data + " " + hs + " Evento: Erro de acesso ao Banco pelo QR Code " + err + "\n")
-                                    arquivo.close()
-                                                
-                                    time.sleep(0.1)
                                 
                                 try:                    
 
-                                    query = ("SELECT ID FROM qrcode WHERE ID = %s")%id_raiz # procura na coluna ID um código = ao id_raiz
+                                    query = ("SELECT ID FROM qrcode WHERE ID = %s")%id_raiz
                                     cursor.execute(query)
 
                                     for i in cursor: # Se o cursor encontrar o item especificado, prossegue...
@@ -183,7 +175,7 @@ class Qrcode(Rele,Evento,Notifica,Banco):
 
                     item = item
 
-                    try:  # Tenta conectar com o banco de dados
+                    try:
 
                         cnx = mysql.connector.connect(user='leandro',database='CMM', password='5510',host='localhost')
                         cursor = cnx.cursor()
@@ -210,15 +202,13 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                           
                             print(err)
 
-                    if id_valido == 1: # Se o cursor encontrou o ID correspondente prossegue...
+                    if id_valido == 1:
 
-                        hs = time.strftime("%H:%M:%S") # MANTEM ATUALIZADO O HORARIO DO REGISTRO DE LOG
+                        hs = time.strftime("%H:%M:%S")
+                        consta_no_banco = 1
 
-                        consta_no_banco = 1 # print("Este ID consta no banco",id_raiz)
+                        try:
 
-                        try:  # Primeiro ve se a data ainda não expirou e se o ID ja está liberado o horario
-
-                            # Verifica só id e data
                             query = ("SELECT * FROM qrcode WHERE data_final >= CURDATE() AND ID = %s")%id_raiz
                             cursor.execute(query)
                                   
@@ -238,7 +228,6 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                 print("\nID",ID,"\nNome",nome,"valido de",data_inicio.strftime('%d/%m/%Y'),"até",data_final.strftime('%d/%m/%Y'),"das",hora_inicio,"as",hora_final,"hs","dias da semana",dias_semana)
 
                                 hs = str(hs)
-
                                 consta_no_banco = 1
 
                             # Calculos para verificar a compatibilidade do código dinamico com o horario
@@ -293,101 +282,11 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                     fora_do_horario = 1
 
 
-                            if acesso == 1: #Verifica o dia da semana que esta autorizado
-
-                                dia = time.strftime("%A")
-
-                                liberado = "0"
-
-                                b = str(dias_semana)
-
-                                seg = b[0]
-                                ter = b[1]
-                                qua = b[2]
-                                qui = b[3]
-                                sex = b[4]
-                                sab = b[5]
-                                dom = b[6]
-
-                                if dia == "Monday":
-                                        
-                                    if seg == "1":        
-                                        liberado = "1"
-                                        
-                                    else:        
-                                        print("QR Code não autorizado as segundas-feiras")
-                                        liberado = "0"
-                                            
-
-                                if dia == "Tuesday":
-                                    
-                                    if ter == "1":        
-                                        liberado = "1"
-                                        
-                                    else:        
-                                        print("QR Code não autorizado as terças-feiras")
-                                        liberado = "0" 
-
-                                if dia == "Wednesday":
-                                        
-                                    if qua == "1":        
-                                        liberado = "1"
-                                        
-                                    else:        
-                                        print("QR Code não autorizado as quartas-feiras")
-                                        liberado = "0"
-
-                                if dia == "Thursday":
-                                        
-                                    if qui == "1":        
-                                        liberado = "1"
-                                        
-                                    else:        
-                                        print("QR Code não autorizado as quintas-feiras")
-                                        liberado = "0"                                            
-
-                                if dia == "Friday":
-                                    
-                                    if sex == "1":        
-                                        liberado = "1"
-                                        
-                                    else:        
-                                        print("QR Code não autorizado as sextas-feiras")
-                                        liberado = "0"                                                
-                                                        
-                                        
-                                if dia == "Saturday":
-                                    
-                                    if sab == "1":        
-                                        liberado = "1"
-                                        
-                                    else:        
-                                        print("QR Code não autorizado aos sábados")
-                                        liberado = "0"
-                                        
-
-                                if dia == "Sunday":
-                                        
-                                    if dom == "1":        
-                                        liberado = "1"
-                                        
-                                    else:
-                                        
-                                        print("QR Code não autorizado aos domingos")
-                                        liberado = "0"
-
                                 if liberado == "1":
-
-                                    if self.notifica == "1":
-
-                                        print("Notificando Condfy, Cliente:",self.cliente,"ID:",self.id_raiz)
-                                        
-                                        self.avisa_condfy.qr_utilizado(self.cliente,self.id_raiz)
 
                                     if (self.portao == "garagem_entrada"):
 
                                         print ("Acesso por qr code Entrada Garagem")
-
                                         os.system("mpg123 /home/pi/CMM/mp3/bemvindo_LagoSul.mp3")
 
                                         qr = self.banco.encontra("qr_utilizado","id",self.id_raiz)
@@ -395,20 +294,22 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                         if qr == "1":
 
                                             print("Este QR Code já foi utilizado")
-
                                             os.system("mpg123 /home/pi/CMM/mp3/qr_utilizado.mp3")
-
                                             time.sleep(2)
 
                                         else:
                                         
                                             garagem_entrada()
                                             self.banco.insere("qr_utilizado","id",self.id_raiz) # tabela,coluna,valor
-                                        
+
+                                            if self.notifica == "1":
+                                                print("Notificando Condfy, Cliente:", self.cliente, "ID:", self.id_raiz)
+
+                                                self.avisa_condfy.qr_utilizado(self.cliente, self.id_raiz)
+
                                     if (self.portao == "garagem_saida"):
 
                                         print ("Saída por qr code Garagem")
-
                                         saindo = self.banco.encontra("qr_utilizado", "id", self.id_raiz)
 
                                         if saindo == "1": # QR ja utilizado, ja pode sair
@@ -423,9 +324,7 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                             if acesso == 0 and consta_no_banco == 1 and fora_do_horario == 0:
 
                                 print("QR Code com data expirada")
-
                                 os.system("mpg123 /home/pi/mp3/210.mp3")# Data Expirada
-                                print("data expirada")
 
                         except Exception as e:
                             
@@ -434,40 +333,9 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                     if id_valido == 0:
 
                         print("QR Code não cadastrado")
-
-                        try:
-
-                            os.system("mpg123 /home/pi/mp3/189.mp3") # QR Code não cadastrado
-
-                        except Exception as err:
-
-                            print(err)
+                        os.system("mpg123 /home/pi/mp3/189.mp3") # QR Code não cadastrado
 
         except Exception as err:
 
             print("opa",err)
 
-# Para chamar a classe usar:
-
-##import biblioteca_QRCODE_LagoSul as qr
-##import threading
-##import sys
-##
-##
-##
-##qr1_garagem = qr.Qrcode("172.20.9.8","0054",4,"garagem_entrada","1") # IP,CLIENTE,RELE,PORTAO,NOTIFICA CONDFY
-### Ex. qr2_garagem = qr.Qrcode("172.20.9.8","0054",4,"garagem_saida","0")
-###     qr_social = qr.Qrcode("172.20.9.8","0054",1,"social","1")
-###     qr_eclusa = qr.Qrcode("172.20.9.8","0054",2,"eclusa","0")
-##
-##def thread_qrcode_garagem(): # Programa que mantem a conexão com o QR Code
-##
-##    print("\nPrograma QR Code em execução\n")
-##
-##    qr1_garagem.start()
-##
-##qr_garagem1 = threading.Thread(target=thread_qrcode_garagem)
-##qr_garagem1.start()
-
-
-        
