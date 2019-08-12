@@ -345,6 +345,8 @@ def Portoes_sociais(Rele): # Programa
     sys.stdout.write("\nPrograma Sociais em execução na thread\n")
 
     saida = 0
+	
+	
         
     while(1):
 
@@ -359,31 +361,37 @@ def Portoes_sociais(Rele): # Programa
         ctw2 = entradas.ctw2
        
         if ctw1 == 0:
+		
+			abre = Abre()		
+			abre.social()
 
-            status = open("status_social.cmm","w")
-            status.write("1")
-            status.close()
+            #status = open("status_social.cmm","w")
+            #status.write("1")
+            #status.close()
      
-            Intertravamento("abre_social")
+            #Intertravamento("abre_social")
 
-            status = open("status_social.cmm","w")
-            status.write("0")
-            status.close()
+            #status = open("status_social.cmm","w")
+            #status.write("0")
+            #status.close()
 
             
         if ctw2 == 0 or btn2 == 0:
+		
+			abre = Abre()		
+			abre.eclusa()
 
-            status = open("status_eclusa.cmm","w")
-            status.write("1")
-            status.close()
+            #status = open("status_eclusa.cmm","w")
+            #status.write("1")
+            #status.close()
 
-            Intertravamento("abre_eclusa")
+            #Intertravamento("abre_eclusa")
 
-            status = open("status_eclusa.cmm","w")
-            status.write("0")
-            status.close()
+            #status = open("status_eclusa.cmm","w")
+            #status.write("0")
+            #status.close()
 
-            saida = 1
+            #saida = 1
 
         if btn1 == 0:
 
