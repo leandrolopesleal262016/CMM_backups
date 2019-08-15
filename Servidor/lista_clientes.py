@@ -13,7 +13,7 @@ def _cliente(numero):
     cliente ['5510'] = ['Teste','172.20.6.143']
     cliente ['5785'] = ['Parati','172.20.6.146']
     cliente ['5987'] = ['Carmem','172.18.34.247']
-    cliente ['0001'] = ['LagoSul','172.20.9.159']
+    cliente ['0001'] = ['LagoSul','172.19.1.251']
 
     for i in cliente:
 

@@ -9,12 +9,9 @@ import json
 import mysql.connector # cominica com o mysql no python 3.6
 import time
 import socket
-import signal # Bibloteca para uso do time out
 from lista_clientes import _cliente
-
 from wsgiref.simple_server import make_server
 from pyramid.view import view_config
-
 from pyramid.config import Configurator
 
 
@@ -32,17 +29,11 @@ enviar = 0
 cadastrar_ID = 0
 deletar_ID = 0
 
-def timeout(signum, frame):
-
-    print ("Excedeu o tempo esperado")
-    return
 
 ####################  Este trecho fica ouvindo os comandos para CADATRAR ou DELETAR pelo ID   ##########
 
 def thread_cadastro():
 
-##    global deletar_ID
-##    global cadastrar_ID
  
     host = '0.0.0.0'
     port = 5050
@@ -91,11 +82,6 @@ def thread_cadastro():
                 print("\nreconheceu cadastrar\n")
                
                 cadastrar_ID = 1
-##
-##                reply = "ok"            
-##                conn.sendall(str.encode(reply))  # Envia o reply de volta para o cliente  
-##                conn.close()
-
                 
                 try:
 
@@ -112,30 +98,15 @@ def thread_cadastro():
                         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                   
                             print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-
-                            arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                            arquivo.write(" Evento: Banco de Dados: Usuario ou senha invalidos\n")
-                            arquivo.close()
+                            
 
                         elif err.errno == errorcode.ER_BAD_DB_ERROR:
                   
                             print("Esta base de dados nao existe")
-
-                            arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                            arquivo.write(" Evento: Banco de Dados: A base de dados nao existe\n")
-                            arquivo.close()
-
+                           
                         else:
                                           
-                            print(err)
-
-                            arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                            arquivo.write(" Evento: Erro de acesso ao Banco pelo QR Code " + err + "\n")
-                            arquivo.close()
-                                        
-                            time.sleep(0.1)
-                                  
-                            pass
+                            print(err)                           
                         
                         
                     query = ("SELECT * FROM qrcode")  # Seleciona a tabela qrcode
@@ -144,10 +115,8 @@ def thread_cadastro():
                     encontrado = 0
                                         
                     for i in cursor: 
-
                         
-                        ID = i[0] # Seleciona o primeiro item da lista recebida do banco (ID)
-                        
+                        ID = i[0] # Seleciona o primeiro item da lista recebida do banco (ID)                        
 
                         if (ID_recebido == ID): # Compara se o ID vindo do request e igual ao do banco   
 
@@ -162,10 +131,9 @@ def thread_cadastro():
                             df = i[8]
                             ds = i[9]
 
-			    nome = nome.encode('utf-8')
+      			    nome = nome.encode('utf-8')
 			    print("nome vindo banco",nome)
                             encontrado = 1
-
 
                         if encontrado == 1:
 
@@ -184,7 +152,7 @@ def thread_cadastro():
                                 ID = str(ID)
 				ds = str(ds)
 				
-                                arquivo = open("qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
+                                arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
                                 arquivo.write(" Evento: Cadastro de QR Code " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
                                 arquivo.close()
 
@@ -249,31 +217,15 @@ def thread_cadastro():
                                             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                                       
                                                 print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-
-                                                arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                                                arquivo.write(" Evento: Banco de Dados: Usuario ou senha invalidos\n")
-                                                arquivo.close()
-
+                                                
                                             elif err.errno == errorcode.ER_BAD_DB_ERROR:
                                       
-                                                print("Esta base de dados nao existe")
-
-                                                arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                                                arquivo.write(" Evento: Banco de Dados: A base de dados nao existe\n")
-                                                arquivo.close()
+                                                print("Esta base de dados nao existe")                                                
 
                                             else:
                                                               
                                                 print(err)
-
-                                                arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                                                arquivo.write(" Evento: Erro de acesso ao Banco pelo QR Code " + err + "\n")
-                                                arquivo.close()
-                                                            
-                                                time.sleep(0.1)
-                                                      
-                                                pass
-                                            
+                                                
                                             
                                         query = ("SELECT * FROM qrcode")  # Seleciona a tabela qrcode
                                         cursor.execute(query)
@@ -281,10 +233,8 @@ def thread_cadastro():
                                         encontrou = 0
                                                             
                                         for i in cursor: 
-
                                             
-                                            ID = i[0] # Seleciona o primeiro item da lista recebida do banco (ID)
-                                            
+                                            ID = i[0] # Seleciona o primeiro item da lista recebida do banco (ID)                                            
 
                                             if (ID_recebido == ID): # Compara se o ID vindo do request e igual ao do banco   
 
@@ -320,7 +270,7 @@ def thread_cadastro():
                                                     ID = str(ID)
                                                     ds = str(ds)
                                                     
-                                                    arquivo = open("qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
+                                                    arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
                                                     arquivo.write(" Evento: Cadastro de QR Code " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
                                                     arquivo.close()
 
@@ -367,10 +317,6 @@ def thread_cadastro():
                 print("\nreconheceu deletar\n")
 
                 deletar_ID = 1
-
-##                reply = "ok"            
-##                conn.sendall(str.encode(reply))  # Envia o reply de volta para o cliente  
-##                conn.close()
      
                 try:
 
@@ -446,37 +392,16 @@ def thread_cadastro():
                             
                         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                   
-                            print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-
-                            arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                            arquivo.write(" Evento: Banco de Dados: Usuario ou senha invalidos\n")
-                            arquivo.close()
+                            print("Alguma coisa esta errada com o nome de usuario ou a senha!")                           
 
                         elif err.errno == errorcode.ER_BAD_DB_ERROR:
                   
                             print("Esta base de dados nao existe")
-
-                            arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                            arquivo.write(" Evento: Banco de Dados: A base de dados nao existe\n")
-                            arquivo.close()
-
+                            
                         else:
                                           
                             print(err)
-
-                            arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                            arquivo.write(" Evento: Erro de acesso ao Banco pelo QR Code " + err + "\n")
-                            arquivo.close()
-                                        
-                            time.sleep(0.1)
-                                  
-                            pass
-                        
-                        
-##                    query = ("SELECT * FROM buffer_delete")  # Seleciona a tabela qrcode
-##                    cursor.execute(query)
-##
-                     
+ 
                     
                     try:                
             
@@ -488,17 +413,7 @@ def thread_cadastro():
                 
                     except Exception as err: # mysql.connector.Error as err:
 
-                        print("Erro na inclusao do banco",err)
-                        
-
-##                        if err.errno == 1062:
-##
-##                            print("ID ja esta na tabela delete")
-##                            
-##                            
-##                        else:
-
-##                          print("Erro na inclusão do banco",err)
+                        print("Erro na inclusao do banco",err)                        
 
 
                     else:
@@ -507,9 +422,6 @@ def thread_cadastro():
 
                         ID = str(ID_recebido)
 
-                         
-##                    break           
-                    
                 break
                 
                 
@@ -550,31 +462,14 @@ def buffer():
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
       
                 print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-
-                arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                arquivo.write(" Evento: Banco de Dados: Usuario ou senha invalidos\n")
-                arquivo.close()
-
+               
             elif err.errno == errorcode.ER_BAD_DB_ERROR:
       
                 print("Esta base de dados nao existe")
-
-                arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                arquivo.write(" Evento: Banco de Dados: A base de dados nao existe\n")
-                arquivo.close()
-
+               
             else:
                               
-                print(err)
-
-                arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                arquivo.write(" Evento: Erro de acesso ao Banco pelo QR Code " + err + "\n")
-                arquivo.close()
-                            
-                time.sleep(0.1)
-                      
-                pass
-            
+                print(err)                
       
         encontramos = 0
 
@@ -647,7 +542,7 @@ def buffer():
 
                             print("Nao encontrou o cliente correspondente na lista")
 
-                            arquivo = open("qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
+                            arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
                             arquivo.write(" Evento: Nao encontrou cliente na lista " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
                             arquivo.close()
 
@@ -687,7 +582,7 @@ def buffer():
 
                             print("Enviado evento pelo buffer",hs)
 
-                            arquivo = open("qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
+                            arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
                             arquivo.write(" Evento: Enviado evento para o cliente pelo buffer " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
                             arquivo.close()
                             
@@ -704,30 +599,15 @@ def buffer():
                                     if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                               
                                         print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-
-                                        arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                                        arquivo.write(" Evento: Banco de Dados: Usuario ou senha invalidos\n")
-                                        arquivo.close()
-
+                                       
                                     elif err.errno == errorcode.ER_BAD_DB_ERROR:
                               
                                         print("Esta base de dados nao existe")
-
-                                        arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                                        arquivo.write(" Evento: Banco de Dados: A base de dados nao existe\n")
-                                        arquivo.close()
-
+                                       
                                     else:
                                                       
                                         print(err)
-
-                                        arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                                        arquivo.write(" Evento: Erro de acesso ao Banco pelo QR Code " + err + "\n")
-                                        arquivo.close()
-                                                    
-                                        time.sleep(0.1)
-                                              
-                                        pass
+                                       
                                 else:
 
                                     query = ("UPDATE qrcode SET enviado = 1 WHERE ID = %s") %ID 
@@ -740,8 +620,7 @@ def buffer():
                                 print("Erro na atualizacao do valor no campo 'enviado'",err)
                                 
                                 break
-                                                       
-
+                               
                             else:
 
                                 print("\nAtualizado campo 'enviado' para 1\n")
@@ -749,8 +628,7 @@ def buffer():
                                 cnx.close()
 
                                 break
-
-                                                        
+                                
                 except Exception as e:
 
                     print(e)
@@ -771,31 +649,14 @@ def buffer():
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
       
                 print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-
-                arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                arquivo.write(" Evento: Banco de Dados: Usuario ou senha invalidos\n")
-                arquivo.close()
-
+                
             elif err.errno == errorcode.ER_BAD_DB_ERROR:
       
                 print("Esta base de dados nao existe")
-
-                arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                arquivo.write(" Evento: Banco de Dados: A base de dados nao existe\n")
-                arquivo.close()
-
+                
             else:
                               
-                print(err)
-
-                arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                arquivo.write(" Evento: Erro de acesso ao Banco pelo QR Code " + err + "\n")
-                arquivo.close()
-                            
-                time.sleep(0.1)
-                      
-                pass
-            
+                print(err)            
       
         achou = 0
 
@@ -809,7 +670,6 @@ def buffer():
             
             achou = 1
 
-
             if achou == 1:
 
                 print("\nEncontrou na tabela delete_buffer item nao enviado")
@@ -817,9 +677,8 @@ def buffer():
                 try:
                     
                     cond = str(cond)
-                    ID = str(ID)
+                    ID = str(ID)                    
                     
-                                        
                     remover = {"ID": ID,"condominio": cond}
 
                     cnx.close()
@@ -846,7 +705,7 @@ def buffer():
 
                             print("Nao encontrou o cliente correspondente na lista")
 
-                            arquivo = open("qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
+                            arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
                             arquivo.write(" Evento: Nao encontrou cliente na lista " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
                             arquivo.close()
 
@@ -860,7 +719,7 @@ def buffer():
 
                             host = ID_correspondente
                             port = 5511
-                               
+                              
                             print("\nEnviando delete atraves do buffer para o cliente...\n")
                             
                             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -877,7 +736,7 @@ def buffer():
                             print(reply.decode('utf-8'))
                             
                             s.close()
-                                          
+                            
                         except Exception as e:
                             
                             print("\nNao conseguiu enviar delete para o cliente\n", e)
@@ -899,30 +758,15 @@ def buffer():
                                     if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                               
                                         print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-
-                                        arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                                        arquivo.write(" Evento: Banco de Dados: Usuario ou senha invalidos\n")
-                                        arquivo.close()
-
+                                       
                                     elif err.errno == errorcode.ER_BAD_DB_ERROR:
                               
                                         print("Esta base de dados nao existe")
-
-                                        arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                                        arquivo.write(" Evento: Banco de Dados: A base de dados nao existe\n")
-                                        arquivo.close()
-
+                                        
                                     else:
                                                       
                                         print(err)
-
-                                        arquivo = open("log_cmm.txt", "a+") # Escreve o evento no registro de log
-                                        arquivo.write(" Evento: Erro de acesso ao Banco pelo QR Code " + err + "\n")
-                                        arquivo.close()
-                                                    
-                                        time.sleep(0.1)
-                                              
-                                        pass
+                                        
                                 else:
 
                                     query = ("UPDATE buffer_delete SET enviado = 1 WHERE ID = %s") %ID 
@@ -945,7 +789,7 @@ def buffer():
 
                                 break
 
-                                                        
+                               
                 except Exception as e:
 
                     print(e)
@@ -962,9 +806,5 @@ c.start()
 
 b = threading.Thread(target = buffer) 
 b.start() 
-############################################## LOOP PRINCIPAL ###############################
 
-##while (1):
-##
-##
-##    time.sleep(1)
+#############################################################################################
