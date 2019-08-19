@@ -9,6 +9,7 @@ import os     # Executa comandos do sistema operacional Ex.: os.system('sudo reb
 import sys
 from biblioteca_CMM_oficial import Rele, Evento
 from banco import Banco # Classe para inserções, consulta e atualização no banco de dados CMM
+from cmm_io import Entradas # Para leitura das entradas definidas no arq. config.txt
 import socket
 import mysql.connector
 import signal
@@ -370,12 +371,22 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                 print("\ndiferenca de",limite,"min")
                                 limite = int(limite)
 
-                                if limite <  15: 
+                                if limite <=  15: 
 
                                     print("Esta com menos de 15 min de diferenca")
                                     liberado = '1' 
                                     consta_no_banco = 0  # zera a variavel para não narrar a mensagem no final
-                                    mudou = 0                                    
+                                    mudou = 0
+
+                                if limite >  15: 
+
+                                    print("Este qr code já mudou")
+                                    os.system("mpg123 /home/pi/CMM/mp3/qr_mudou.mp3")
+                                    liberado = '0' 
+                                    consta_no_banco = 0  # zera a variavel para não narrar a mensagem no final
+                                    mudou = 0
+
+                                    time.sleep(3)
 
                                 if liberado == "1":
                                     
@@ -390,7 +401,7 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                             os.system("mpg123 /home/pi/CMM/mp3/qr_utilizado.mp3")
                                             time.sleep(2)
 
-                                        else: # QR Code valido
+                                        else: # QR Code com data e horario valido
 
                                             os.system("mpg123 /home/pi/CMM/mp3/bemvindo_LagoSul.mp3")                                        
                                             garagem_entrada()                                           
@@ -404,6 +415,27 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                             except Exception as err:
                                                 
                                                 print("Erro ao notificar o Condfy\n",err)
+
+                                            cont = 150 # 30 segundos
+                                            espera = 0
+
+                                            while cont > 0:
+
+                                                entradas = Entradas()
+                                                laco = entradas.pm1
+
+                                                if laco == 0 and espera == 0:
+                                                
+                                                    print("Laço indutivo ainda não foi acionado...")
+                                                    espera = 1
+                                                    
+                                                if laco == 1:
+
+                                                    print("Acionou o laço dentro dos 30 segundos apos a lioberação do qr")
+                                                    cont = 0
+
+                                                    cont = cont - 1
+                                                time.sleep(0.2)
                                                 
                                     if (self.portao == "garagem_saida"):
 
@@ -415,6 +447,15 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                         
                                         print("Deletando da tabela qrcode...\n")
                                         self.banco.deleta("qrcode", "id", self.id_raiz)
+
+                                        try:
+
+                                            print("\nTenando notificar o Condfy da saida...")                                                
+                                            self.avisa_condfy.qr_utilizado_saida(self.cliente,self.id_raiz)
+                                            
+                                        except Exception as err:
+                                            
+                                            print("Erro ao notificar o Condfy da saida\n",err)
 
                                         
                             if acesso == 0 and consta_no_banco == 1 and fora_do_horario == 0:
