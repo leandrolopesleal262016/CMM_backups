@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
@@ -68,8 +69,8 @@ temperatura = Temperatura()
 ##email = Email()
 ##clima = Clima()
 evento = Evento("5987") # Inicia a classe evento com o codigo do cliente
-qr1 = Qrcode("172.18.34.249","5987",4,"social") # IP,Cliente,rele,portao) - "172.18.34.247","5987",4,"social" ou "eclusa"
-qr2 = Qrcode("172.18.34.250","5987",5,"eclusa") # IP,Cliente,rele,portao) - "172.18.34.247","5987",4,"social" ou "eclusa"
+qr1 = Qrcode("172.18.34.249","5987",4,"social","1") # IP,Cliente,rele,portao) - "172.18.34.247","5987",4,"social" ou "eclusa"
+qr2 = Qrcode("172.18.34.250","5987",5,"eclusa","0") # IP,Cliente,rele,portao) - "172.18.34.247","5987",4,"social" ou "eclusa"
 
 ##ihm = IHM() 
 
@@ -917,11 +918,11 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
         audio = 0 # Deixa ativo ass mensagens de audio de abertura
         cont = 0
 
-        a = open("status_social.cmm","r")
+        a = open("/home/pi/CMM/status_social.cmm","r")
         abre_social = a.read()
         a.close()
 
-        b = open("status_eclusa.cmm","r")
+        b = open("/home/pi/CMM/status_eclusa.cmm","r")
         abre_eclusa = b.read()
         b.close()
         
@@ -951,7 +952,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                 
                 if pm2 == 0: # Se Ponto magnético Eclusa fechado
                     
-                    s = open("status_social.cmm","w")
+                    s = open("/home/pi/CMM/status_social.cmm","w")
                     s.write("1")
                     s.close()
 
@@ -997,7 +998,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                                 evento.enviar("R","133","001") # Envia fechamento
                                 contador = 1
                                                             
-                                s = open("status_social.cmm","w")
+                                s = open("/home/pi/CMM/status_social.cmm","w")
                                 s.write("0")
                                 s.close()
 
@@ -1013,7 +1014,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
 
                                 os.system("mpg123 /home/pi/CMM/mp3/obstrucao.mp3")
                                 
-                                status = open("status_social.cmm","w") # Para não disparar o arrombamento
+                                status = open("/home/pi/CMM/status_social.cmm","w") # Para não disparar o arrombamento
                                 status.write("1")
                                 status.close()
 
@@ -1064,7 +1065,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
 
                 if pm1 == 0: # Ponto magnético Social fechado, pode abrir a eclusa
                     
-                    s = open("status_eclusa.cmm","w")
+                    s = open("/home/pi/CMM/status_eclusa.cmm","w")
                     s.write("1")
                     s.close()
 
@@ -1108,7 +1109,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                                 evento.enviar("R","133","003") # Envia fechamento
                                 contador = 1
                                 
-                                s = open("status_social.cmm","w")
+                                s = open("/home/pi/CMM/status_social.cmm","w")
                                 s.write("0")
                                 s.close()
 
@@ -1124,7 +1125,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                                 
                                 os.system("mpg123 /home/pi/CMM/mp3/obstrucao.mp3")
                                 
-                                status = open("status_eclusa.cmm","w") # Para não disparar o arrombamento
+                                status = open("/home/pi/CMM/status_eclusa.cmm","w") # Para não disparar o arrombamento
                                 status.write("1")
                                 status.close()                                
 
@@ -1158,7 +1159,7 @@ class Abre(Rele): # Inicia a thread dos portoes sociais importando a classe Rele
 
     def social(self):
 
-        status = open("status_social.cmm","w") # Para não disparar o arrombamento
+        status = open("/home/pi/CMM/status_social.cmm","w") # Para não disparar o arrombamento
         status.write("1")
         status.close()
 
@@ -1169,7 +1170,7 @@ class Abre(Rele): # Inicia a thread dos portoes sociais importando a classe Rele
         
     def eclusa(self):
 
-        status = open("status_eclusa.cmm","w") # Para não disparar o arrombamento
+        status = open("/home/pi/CMM/status_eclusa.cmm","w") # Para não disparar o arrombamento
         status.write("1")
         status.close()        
     
@@ -1215,18 +1216,18 @@ def Arrombamento(Rele): # Inicia a thread arrombamento de portões
         pm1 = entradas.pm1
         pm2 = entradas.pm2
 
-        a = open("status_social.cmm","r")
+        a = open("/home/pi/CMM/status_social.cmm","r")
         abre_social = a.read()
         a.close()
 
-        b = open("status_eclusa.cmm","r")
+        b = open("/home/pi/CMM/status_eclusa.cmm","r")
         abre_eclusa = b.read()
         b.close()  
                 
         if pm1 == 1 and ar1 == 0:
 
             time.sleep(1) # Filtra algum possivel ruido de até 1 segundo
-            a = open("status_social.cmm","r")
+            a = open("/home/pi/CMM/status_social.cmm","r")
             abre_social = a.read()
             a.close()
 
@@ -1260,7 +1261,7 @@ def Arrombamento(Rele): # Inicia a thread arrombamento de portões
 
             time.sleep(1) # Filtra algum possivel ruido de até 500 milissegundos
 
-            b = open("status_eclusa.cmm","r")
+            b = open("/home/pi/CMM/status_eclusa.cmm","r")
             abre_eclusa = b.read()
             b.close()
 
@@ -1443,7 +1444,7 @@ def Servidor(Rele): ######### Thread servidor Cadastro QR Code #################
                                 ID = str(ID)
                                 cliente = str(cliente)
                             
-                                arquivo = open("qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
+                                arquivo = open("/home/pi/CMM/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
                                 arquivo.write(" Evento: Deletado QR Code " + "ID" + ID + hs + "\n")
                                 arquivo.close()
 
@@ -1552,7 +1553,7 @@ def Servidor(Rele): ######### Thread servidor Cadastro QR Code #################
 
                             print("\ncadastrado com sucesso ",ID)
 
-                            arquivo = open("qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
+                            arquivo = open("/home/pi/CMM/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
                             arquivo.write(" Evento: Deletado QR Code " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
                             arquivo.close()
 
@@ -1603,25 +1604,25 @@ def Portoes_sociais(Rele): # Programa
         
         if ctw1 == 0:
 
-            status = open("status_social.cmm","w")
+            status = open("/home/pi/CMM/status_social.cmm","w")
             status.write("1")
             status.close()
      
             Intertravamento("abre_social")
 
-            status = open("status_social.cmm","w")
+            status = open("/home/pi/CMM/status_social.cmm","w")
             status.write("0")
             status.close()
 
         if ctw2 == 0:
 
-            status = open("status_eclusa.cmm","w")
+            status = open("/home/pi/CMM/status_eclusa.cmm","w")
             status.write("1")
             status.close()
 
             Intertravamento("abre_eclusa")
 
-            status = open("status_eclusa.cmm","w")
+            status = open("/home/pi/CMM/status_eclusa.cmm","w")
             status.write("0")
             status.close()
                 
@@ -1741,11 +1742,11 @@ def Alarmes(Rele):
 
                 rele.desliga(8) # Desliga sirene
 
-                status = open("status_social.cmm","w") # Volta o arquivo para zero para ativar a verificação de arrombamento
+                status = open("/home/pi/CMM/status_social.cmm","w") # Volta o arquivo para zero para ativar a verificação de arrombamento
                 status.write("0")
                 status.close()
 
-                status = open("status_eclusa.cmm","w")
+                status = open("/home/pi/CMM/status_eclusa.cmm","w")
                 status.write("0")
                 status.close()
 
@@ -1822,11 +1823,11 @@ def Alarmes(Rele):
 
                 rele.desliga(8) # Desliga sirene
 
-                status = open("status_social.cmm","w") # Volta o arquivo para zero para ativar a verificação de arrombamento
+                status = open("/home/pi/CMM/status_social.cmm","w") # Volta o arquivo para zero para ativar a verificação de arrombamento
                 status.write("0")
                 status.close()
 
-                status = open("status_eclusa.cmm","w")
+                status = open("/home/pi/CMM/status_eclusa.cmm","w")
                 status.write("0")
                 status.close()
 
@@ -1920,11 +1921,11 @@ def Alarmes(Rele):
 
                 rele.desliga(8) # Desliga sirene
 
-                status = open("status_social.cmm","w") # Volta o arquivo para zero para ativar a verificação de arrombamento
+                status = open("/home/pi/CMM/status_social.cmm","w") # Volta o arquivo para zero para ativar a verificação de arrombamento
                 status.write("0")
                 status.close()
 
-                status = open("status_eclusa.cmm","w")
+                status = open("/home/pi/CMM/status_eclusa.cmm","w")
                 status.write("0")
                 status.close()                
 
@@ -2046,7 +2047,7 @@ def Buffer():
 
     while(1):
 
-        b = open("buffer_eventos.txt","r")
+        b = open("/home/pi/CMM/buffer_eventos.txt","r")
         
         for line in b:
 
@@ -2089,7 +2090,7 @@ def Buffer():
 
                     try:
 
-                        txt = open("buffer_eventos.txt","r")
+                        txt = open("/home/pi/CMM/buffer_eventos.txt","r")
                         for l in txt:                        
                             l = l.replace("\n","") # Coloca na lista o evento ja editado
                             lista.append(evento)
@@ -2106,12 +2107,12 @@ def Buffer():
 
                         # Zera o arquivo buffer
 
-                        tx = open("buffer_eventos.txt","w") 
+                        tx = open("/home/pi/CMM/buffer_eventos.txt","w") 
                         tx.close()
 
                         # Reescreve o texto com a nova lista editada
 
-                        txt = open("buffer_eventos.txt","a")
+                        txt = open("/home/pi/CMM/buffer_eventos.txt","a")
                         for i in nova_lista:
                             txt.write(i + "\n")
                         txt.close()    
