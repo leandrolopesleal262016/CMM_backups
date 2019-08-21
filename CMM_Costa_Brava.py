@@ -581,7 +581,7 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                 pmg1 = leitor("leitor1_in1")
 
-                cont = 60     # Tempo maximo para deixar o portão aberto (60 = 30 segundos)
+                cont = 150     # Tempo maximo para deixar o portão aberto (150 = 30 segundos)
                 
                 if pmg1 == 1: # Portão não abriu apos o comando
 
@@ -599,7 +599,7 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                     while cont > 0:   # Enquanto o portão esta aberto verifica
 
-                        if cont == 60:
+                        if cont == 150:
 
                             print("Portão Garagem abriu")
                         
@@ -637,7 +637,7 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                                     time.sleep(0.1)
                                     
-                                print("Passou alguem, verificando dupla passagem...")
+##                                print("Passou alguem, verificando dupla passagem...")
 
                                 pmg1 = leitor("leitor1_in1") # Faz a leitura do ponto magnetico
                                 
@@ -678,12 +678,12 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                                         time.sleep(0.2)
                                  
-                                print("Fim do cilo Garagem")
+##                                print("Fim do cilo Garagem")
 
                                 time.sleep(1)
 
                         cont = cont - 1
-                        time.sleep(0.5)
+                        time.sleep(0.2)
 
                     if cont == 1: # Passaram se 29 segundos e o portão não fechou
 
@@ -712,8 +712,7 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
     s2.desliga_rele2_exp7() # Garante que o Foto esteja desligado
     time.sleep(0.1)
 
-    mudanca2 = 0
-    
+        
     while(1):
 
         hs = time.strftime("%H:%M:%S")
@@ -740,7 +739,7 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                 pmg2 = leitor("leitor7_in1")
 
-                cont = 60     # Tempo maximo para deixar o portão aberto (60 = 30 segundos)
+                cont = 150     # Tempo maximo para deixar o portão aberto (150 = 30 segundos)
                 
                 if pmg2 == 1: # Portão não abriu apos o comando
 
@@ -758,7 +757,7 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                     while cont > 0:   # Enquanto o portão esta aberto verifica
 
-                        if cont == 60:
+                        if cont == 150:
 
                             print("Portão Subsolo abriu")
                         
@@ -788,7 +787,7 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                                     time.sleep(0.1)
                                     
-                                print("Passou alguem Subsolo, verificando dupla passagem...")
+##                                print("Passou alguem Subsolo, verificando dupla passagem...")
 
                                 pmg2 = leitor("leitor7_in1") # Faz a leitura do ponto magnetico
                                 
@@ -796,7 +795,7 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                                     pmg2 = leitor("leitor7_in1") # Faz a leitura do ponto magnetico
 
-                                    print("Aguardando portão Subsolo fechar apos entrada ou saida")
+                                    print("Aguardando portão Subsolo fechar")
 
                                     while pmg2 == 0:  # Enquanto o portão ainda não fechou                                
 
@@ -828,7 +827,7 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                                         time.sleep(0.2)
                                         
-                                print("Fim do cilo Subsolo")
+##                                print("Fim do cilo Subsolo")
 
                                 status = open("/home/pi/CMM/status_garagem_2.cmm","w") 
                                 status.write("0")
@@ -837,7 +836,7 @@ def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe 
                                 time.sleep(1)
 
                         cont = cont - 1
-                        time.sleep(0.5)
+                        time.sleep(0.2)
 
                     if cont == 1: # Passaram se 29 segundos e o portão não fechou
 
@@ -1203,7 +1202,7 @@ def Alarmes_garagem_1(Rele):
 
                 cont = 30 # Tempo maximo de espera
 
-                print("Aguardando portão fechar depois da mudanca")
+                print("Aguardando portão Garagem fechar depois da mudanca")
 
                 while cont > 0:
 
@@ -1229,10 +1228,9 @@ def Alarmes_garagem_1(Rele):
             
         if pmg1 == 0 and mudanca1 == 0 and status_tx1 == "0": # Violação do portão da garagem
 
-            time.sleep(0.2)
-            pmg1 = leitor("leitor1_in1")                      
+            time.sleep(0.2)                                
 
-            cont = 5
+            cont = 20
             violacao = 1
             
             while cont > 0:
@@ -1245,8 +1243,8 @@ def Alarmes_garagem_1(Rele):
 
                 if pmg1 == 0 and status_tx1 == "0":
 
-                    violacao = 1                    
-
+                    violacao = 1
+                    
                 if pmg1 == 1:
                     
                     violacao = 0
@@ -1304,81 +1302,22 @@ def Alarmes_garagem_2(Rele):
 
     mudanca2 = 0
     
-    while(1):
-        
-##        l2 = Leitor() # inicia a classe para leitura das entradas dos modulos expansores 
+    while(1):        
+
         s2 = Expansor()
 
         time.sleep(0.1)
         pmg2 = leitor("leitor7_in1") # Ponto magnetico portão leitor 1 entrada 1        
-##        time.sleep(0.1)       
-##        mud2 = leitor("leitor7_in4")  # Chave de mudança
 
         t = open("/home/pi/CMM/status_garagem_2.cmm","r")
         status_tx2 = t.read()
         t.close()
-
-##        if mud2 == 1 and mudanca2 == 0: # Chave de mudança acionada
-##
-##            time.sleep(0.2)
-##            mud2 = leitor("leitor7_in4")
-##
-##            if mud2 == 1:
-##
-##                t = open("/home/pi/CMM/status_garagem_2.cmm","w")
-##                t.write("1")
-##                t.close()
-##                
-##                s2.liga_rele1_exp7() # Aciona o rele 1 do modulo 2 (Abre)
-##                time.sleep(2)                
-##                s2.liga_rele2_exp7() # Aciona o rele 2 do modulo 2 (Foto)
-##
-##                mudanca2 = 1
-##
-##        if mud2 == 0 and mudanca2 == 1:
-##
-##            time.sleep(0.2)
-##            mud2 = leitor("leitor7_in4")
-##
-##            if mud2 == 0:
-##                
-##                s2.desliga_rele1_exp7() # Desliga o rele 1 do modulo 1 (Abre)                             
-##                s2.desliga_rele2_exp7() # Desliga o rele 2 do modulo 1 (Foto)
-##                
-##                pmg2 = leitor("leitor7_in1")
-##
-##                cont = 30 # Tempo maximo de espera
-##
-##                print("Aguardando portão Subsolo fechar")
-##
-##                while cont > 0:
-##
-##                    pmg2 = leitor("leitor7_in1")
-##
-##                    if(pmg2 == 0): # Portão ainda aberto                                      
-##
-##                        time.sleep(1)
-##                        cont = cont - 1
-##                            
-##                    if (pmg2 == 1): # Portão ja fechou
-##
-##                        print("Portão Subsolo fechou")
-##
-##                        t = open("/home/pi/CMM/status_garagem_2.cmm","w")
-##                        t.write("0")
-##                        t.close()
-##                        
-##                        cont = 0
-##                        mudanca2 = 0
-##                        time.sleep(2)
-##                        break
                                 
         if pmg2 == 0 and status_tx2 == "0": # Violação do portão da garagem
 
             time.sleep(0.2) 
-            pmg2 = leitor("leitor7_in1")
-            
-            cont = 5
+                        
+            cont = 20
             violacao = 1
             
             while cont > 0: # Filtro
