@@ -4,6 +4,7 @@
 # Biblioteca QR Code 15/08/2019
 
 import time
+import datetime
 from datetime import datetime, timedelta
 import os     # Executa comandos do sistema operacional Ex.: os.system('sudo reboot now'))
 import sys
@@ -17,9 +18,23 @@ from condfy import Notifica
 
 ######################################  Leitor QR Code  #############################################
 
+def log(texto): # Metodo para registro dos eventos no log.txt (exibido na interface grafica)
+
+    hs = time.strftime("%H:%M:%S") 
+    data = time.strftime('%d/%m/%y')
+
+    texto = str(texto)
+
+    escrita = ("{} - {}  Evento:  {}\n").format(data, hs, texto)
+    escrita = str(escrita)
+
+    l = open("/var/www/html/log_qrcode.txt","a")
+    l.write(escrita)
+    l.close()
+    
 class Qrcode(Rele,Evento,Notifica,Banco):
 
-    print("Instanciou a classe Qrcode")
+    log("Instanciou a classe Qrcode")
 
     def __init__(self,ip,cliente,rele,portao,notifica):
 
@@ -52,7 +67,7 @@ class Qrcode(Rele,Evento,Notifica,Banco):
         
             self.rele.pulso(self.out,2) # Pulso para abrir direto o portão sem intertravamento (Eclusa)
 
-            print("Abrindo portão Garagem Entrada")
+            log("Abrindo cancela Garagem Entrada")
 
             os.system("mpg123 /home/pi/CMM/mp3/acesso_qr.mp3")                         
 
@@ -68,7 +83,7 @@ class Qrcode(Rele,Evento,Notifica,Banco):
         
             self.rele.pulso(self.out,2) # Pulso para abrir direto o portão sem intertravamento (Eclusa)
 
-            print("Abrindo portão Garagem Saida")                      
+            log("Abrindo portão Garagem Saida")                      
 
             time.sleep(2)              
 
@@ -89,7 +104,8 @@ class Qrcode(Rele,Evento,Notifica,Banco):
             time.sleep(0.1)
             sock.connect(server_address)
 
-            print('\nConectado com Leitor QR CODE {} port {}'.format(*server_address),"\n")                     
+            txt = ('Conectado com Leitor QR CODE {} port {}'.format(*server_address))
+            log(txt)
             
             consulta = 0
             id_valido = 0
@@ -120,7 +136,7 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                     dados = sock.recv(128)
                     tamanho += len(dados)
                     
-                    #print ("Dados recebidos",dados,"tamanho",tamanho) # Dados lidos no cartão de QR Code
+                    #log ("Dados recebidos",dados,"tamanho",tamanho) # Dados lidos no cartão de QR Code
 
                     if (tamanho >= 16 or tamanho <8): # Se o QR Code lido não tiver exatamente o mesmo tamanho não consulta o banco de dados
 
@@ -132,11 +148,13 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                         dados = int(dados) # Elimina as '' e o \r
                         dados = str(dados)
 
-                        print("Dados lidos pelo leitor " + dados)
+                        txt = ("Dados lidos pelo leitor " + dados)
+                        log(txt)
 
                         dados = dados[3:] # elimina os 3 primeiros digitos da string dados
                         
-                        print("Dados editados",dados)
+##                        txt = ("Dados editados",dados)
+##                        log(txt)
 
                         dados = int(dados)
 
@@ -160,8 +178,8 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                                                           
                                 except mysql.connector.Error as err:
 
-                                    print("Opa, problema com o banco de dados",err)                                                                              
-                                    print(err)
+                                    log("Opa, problema com o banco de dados")                                                                              
+                                    log(err)
                                                                                     
                                     time.sleep(0.1)                                       
                                 
@@ -178,7 +196,9 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                                        
                                 except Exception as e:
                                 
-                                    print("Tipo de erro: " + str(e))
+                                    txt = ("Tipo de erro: " + str(e))
+                                    log(txt)
+                                    
                                     break
                                     
                                 if ja_encontrou == 1:
@@ -190,13 +210,15 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                 
                 except Exception as e:
 
-                    print("Não foi possivel ler os dados recebidos\n")
-                    print("Tipo de erro: " + str(e))
+                    log("Não foi possivel ler os dados recebidos")
+                    txt = ("Tipo de erro: " + str(e))
+                    log(txt)
                     
                 if consulta == 0:
 
-                    print("\nQR Code em formato invalido")
-                    print("Texto",dados,"\n")
+                    log("QR Code em formato invalido")
+                    txt = ("Texto",dados)
+                    log(txt)
                      
                     os.system("mpg123 /home/pi/mp3/206.mp3")#  Formato de QR Code inválido                    
                         
@@ -235,7 +257,56 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                 data_final = i[8]
                                 dias_semana = i[9]
 
-                                print("\nID",ID,"\nNome",nome,"valido de",data_inicio.strftime('%d/%m/%Y'),"até",data_final.strftime('%d/%m/%Y'),"das",hora_inicio,"as",hora_final,"hs","dias da semana",dias_semana)
+                                try: # Tranforma a hora do formato datetime.timedelta para um horario legivel
+
+                                    a = hora_inicio
+##                                    print("a",a,type(a))
+                                    a = str(a)
+##                                    a = a.replace("datetime.timedelta","")
+##                                    a = a.split(":")
+##                                    
+##                                    val1 = a[0]
+##                                    val2 = a[1]
+##                                    val1 = int(val1)
+##                                    val2 = int(val2)
+##
+##                                    value = datetime.timedelta(val1,val2)
+                                    hora_inicio_editada = a
+
+                                except Exception as err:
+
+                                    print("Não conseguiu editar hora inico",err)
+                                    hora_inicio_editada = hora_inicio
+
+                                try:
+
+                                    b = hora_final
+##                                    print("b",b,type(b))
+                                    b = str(b)                                    
+##                                    a = a.replace("datetime.timedelta","")
+##                                    a = a.split(":")
+##                                    
+##                                    val1 = a[0]
+##                                    val2 = a[1]
+##                                    val1 = int(val1)
+##                                    val2 = int(val2)
+##
+##                                    value = datetime.timedelta(val1,val2)
+                                    hora_final_editada = b
+
+                                except Exception as err:
+
+                                    print("Não conseguiu editar hora final",err)
+                                    hora_final_editada = hora_final                                    
+
+
+                                txt = ("ID",ID,"Nome",nome,"valido de",data_inicio.strftime('%d/%m/%Y'),"até",data_final.strftime('%d/%m/%Y'),"das",hora_inicio_editada,"as",hora_final_editada ,"hs")
+                                txt = str(txt)
+                                txt = txt.replace("'","")
+                                txt = txt.replace(",","")
+                                txt = txt.replace("(","")
+                                txt = txt.replace(")","")                                
+                                log(txt)
 
                                 hora_i = str(hora_inicio)
                                 hora_f = str(hora_final)
@@ -271,15 +342,35 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                 #print("Minutos equivalente",minutos_equivalentes)
 
                                 
-                                confere_tabela = hora_inicio + timedelta(minutes = minutos_equivalentes) # Horario correspondente ao qr code usado
+                                confere_tabela = hora_inicio + timedelta(minutes = minutos_equivalentes) # Horario correspondente ao qr code usado 
 
-                                print("\nQr correspondente as",confere_tabela)
+                                try:
+
+                                    confere_tabela_editado = str(confere_tabela)
+                                    confere_tabela_editado = confere_tabela_editado.replace("1 day","")
+
+                                except:
+
+                                    confere_tabela_editado = confere_tabela
+
+                                txt = ("Qr correspondente as {}").format(confere_tabela_editado)
+                                txt = str(txt)
+                                txt = txt.replace("'","")
+                                txt = txt.replace(",","")
+                                txt = txt.replace("(","")
+                                txt = txt.replace(")","")
+                                log(txt)
                            
                                 confere_tabela = str(confere_tabela)
-                                
-                                confere_tabela_hora = int(confere_tabela.split(":")[0])
-                                confere_tabela_minuto = int(confere_tabela.split(":")[1])
+
+                                confere_tabela_hora = (confere_tabela.split(":")[-3])
+                                confere_tabela_hora = int(confere_tabela_hora.split(" ")[-1]) # Caso apareça 1 day na diferença de qr code
+                                confere_tabela_minuto = int(confere_tabela.split(":")[-2])
                                 confere_tabela_segundos = 00
+                                
+##                                confere_tabela_hora = int(confere_tabela.split(":")[0])
+##                                confere_tabela_minuto = int(confere_tabela.split(":")[1])
+##                                confere_tabela_segundos = 00
 
                                 
                                 confere_tabela_hora = str(confere_tabela_hora)
@@ -293,7 +384,24 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                 horario_atual_segundo = now.second
                                 horario_atual = (horario_atual_hora,horario_atual_minuto)
                                 
-                                print("Horario atual no CMM ",hs)
+                                txt = ("Horario atual no CMM ",hs)
+                                txt = str(txt)
+                                txt = txt.replace("'","")
+                                txt = txt.replace(",","")
+                                txt = txt.replace("(","")
+                                txt = txt.replace(")","")
+                                log(txt)
+
+##                                try:
+##
+##                                    txt = ("confere_tabela",confere_tabela,type(confere_tabela))
+##                                    log(txt)
+##                                    txt = ("hs",hs,type(hs))
+##                                    log(txt)
+##
+##                                except:
+##
+##                                    log("Não deu pra fazer a subtração do valor da tabela com horario atual.")
 
                                 atrasado = 1
                                 liberado = 0
@@ -365,22 +473,34 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                 horario_atual = datetime.strptime(horario_atual, '%H:%M')
 
                                 diferenca = horario_atual - horario_qr # Confere a diferença entre horario atual e horario do qrcode lido
+
+##                                txt = ("Diferença direto da subtração",diferenca,type(diferenca))
+##                                log(txt)
                                 
                                 diferenca = str(diferenca)                                
                                 limite = (diferenca.split(":")[1])
-                                print("\ndiferenca de",limite,"min")
+                                
+                                
+                                txt = ("diferenca de",limite,"min")
+                                txt = str(txt)
+                                txt = txt.replace("'","")
+                                txt = txt.replace(",","")
+                                txt = txt.replace("(","")
+                                txt = txt.replace(")","")
+                                log(txt)
+                                
                                 limite = int(limite)
 
-                                if limite <=  15: 
+                                if limite <=  20: 
 
-                                    print("Esta com menos de 15 min de diferenca")
+##                                    log("Esta com menos de 20 min de diferenca")
                                     liberado = '1' 
                                     consta_no_banco = 0  # zera a variavel para não narrar a mensagem no final
                                     mudou = 0
 
-                                if limite >  15: 
+                                if limite >  20: 
 
-                                    print("Este qr code já mudou")
+                                    log("Este qr code já mudou")
                                     os.system("mpg123 /home/pi/CMM/mp3/qr_mudou.mp3")
                                     liberado = '0' 
                                     consta_no_banco = 0  # zera a variavel para não narrar a mensagem no final
@@ -392,12 +512,12 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                     
                                     if (self.portao == "garagem_entrada"):
 
-                                        print ("Acesso por qr code Entrada Garagem")                                        
+                                        log ("Acesso por qr code Entrada Garagem")                                        
                                         qr = self.banco.encontra("qr_utilizado","id",self.id_raiz)                                       
                                         
                                         if qr == "1":
 
-                                            print("Este QR Code já foi utilizado")
+                                            log("Este QR Code já foi utilizado")
                                             os.system("mpg123 /home/pi/CMM/mp3/qr_utilizado.mp3")
                                             time.sleep(2)
 
@@ -409,12 +529,13 @@ class Qrcode(Rele,Evento,Notifica,Banco):
 
                                             try:
 
-                                                print("\nTenando notificar o Condfy...")                                                
+                                                log("Notificando Condfy...")                                                
                                                 self.avisa_condfy.qr_utilizado(self.cliente,self.id_raiz)
                                                 
                                             except Exception as err:
                                                 
-                                                print("Erro ao notificar o Condfy\n",err)
+                                                txt = ("Erro ao notificar o Condfy",err)
+                                                log(txt)
 
                                             cont = 150 # 30 segundos
                                             espera = 0
@@ -426,12 +547,12 @@ class Qrcode(Rele,Evento,Notifica,Banco):
 
                                                 if laco == 0 and espera == 0:
                                                 
-                                                    print("Laço indutivo ainda não foi acionado...")
+                                                    log("Laço indutivo ainda não foi acionado...")
                                                     espera = 1
                                                     
                                                 if laco == 1:
 
-                                                    print("Acionou o laço dentro dos 30 segundos apos a lioberação do qr")
+##                                                    log("Acionou o laço dentro dos 30 segundos apos a lioberação do qr")
                                                     cont = 0
 
                                                     cont = cont - 1
@@ -439,39 +560,46 @@ class Qrcode(Rele,Evento,Notifica,Banco):
                                                 
                                     if (self.portao == "garagem_saida"):
 
-                                        print ("Saída por qr code Garagem 1")
+                                        log("Saída por qr code Garagem 1")
                                         garagem_saida()
                                         
-                                        print("Deletando da tabela qr utilizado...\n")
+                                        log("Deletando da tabela qr utilizado...")
                                         self.banco.deleta("qr_utilizado", "id", self.id_raiz)
                                         
-                                        print("Deletando da tabela qrcode...\n")
+                                        log("Deletando da tabela qrcode...")
                                         self.banco.deleta("qrcode", "id", self.id_raiz)
 
                                         try:
 
-                                            print("\nTenando notificar o Condfy da saida...")                                                
+                                            log("Tenando notificar o Condfy da saida...")                                                
                                             self.avisa_condfy.qr_utilizado_saida(self.cliente,self.id_raiz)
                                             
                                         except Exception as err:
                                             
-                                            print("Erro ao notificar o Condfy da saida\n",err)
+                                            txt = ("Erro ao notificar o Condfy da saida",err)
+                                            txt = str(txt)
+                                            txt = txt.replace("'","")
+                                            txt = txt.replace(",","")
+                                            txt = txt.replace("(","")
+                                            txt = txt.replace(")","")
+                                            log(txt)
 
                                         
                             if acesso == 0 and consta_no_banco == 1 and fora_do_horario == 0:
 
-                                print("QR Code com data expirada")
+                                log("QR Code com data expirada")
                                 os.system("mpg123 /home/pi/mp3/210.mp3")# Data Expirada                                
                                 consulta = 1
                                                     
                         except Exception as e:
                             
-                            print("Tipo de erro: " + str(e))
+                            txt = ("Tipo de erro: " + str(e))
+                            log(txt)
                             
                         
                     if id_valido == 0:
 
-                        print("QR Code não cadastrado")
+                        log("QR Code não cadastrado")
 
                         try:
 
@@ -485,4 +613,5 @@ class Qrcode(Rele,Evento,Notifica,Banco):
 
         except Exception as err:
 
-            print("opa",err)
+            txt = ("opa",err)
+            log(txt)

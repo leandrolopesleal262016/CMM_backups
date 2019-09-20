@@ -24,7 +24,7 @@ import serial # Para comunicação serial com arduino
 import json
 import mysql.connector
 
-socket.setdefaulttimeout(2) # limite de 2 segundos para enviar o socket
+socket.setdefaulttimeout(1) # limite de 2 segundos para enviar o socket
 
 #ser = serial.Serial("/dev/ttyS0", 9600) #Configura a serial e a velocidade de transmissao
 
@@ -994,6 +994,8 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                             
                             if pm1 == 0: # portão fechou
 
+                                rele.desliga(2) # Fecha o contato e libera a eclusa para ser acionada
+
                                 print("Portão social fechou")
                                 evento.enviar("R","133","001") # Envia fechamento
                                 contador = 1
@@ -1001,9 +1003,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                                 s = open("/home/pi/CMM/status_social.cmm","w")
                                 s.write("0")
                                 s.close()
-
-                                rele.desliga(2) # Fecha o contato e libera a eclusa para ser acionada
-
+                                
                                 break
 
                             if (pm1 == 1 and contador == 1): # Portão ainda aberto após 15 segundos de espera
@@ -1101,9 +1101,11 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                             entradas = Entradas()
                             pm2 = entradas.pm2
                             
-                            # Esperando o portão eclusa fechar...
+##                            print("Esperando o portão eclusa fechar...")
 
                             if pm2 == 0: # portão fechou
+
+                                rele.desliga(1) # Libera o social para abrir
 
                                 print("Portão Eclusa fechou")
                                 evento.enviar("R","133","003") # Envia fechamento
@@ -1111,9 +1113,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                                 
                                 s = open("/home/pi/CMM/status_social.cmm","w")
                                 s.write("0")
-                                s.close()
-
-                                rele.desliga(1) # Libera o social para abrir
+                                s.close()                                
 
                                 break
 

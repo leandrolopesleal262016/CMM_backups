@@ -1,4 +1,4 @@
-#!/home/pi/CMM/bin/python3
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
 # CMM Oficial com placa de expansão da BRAVAS Technololgy  , criar classes para os outros modulos expansores.
@@ -7,7 +7,8 @@
 import biblioteca_CMM as cmm
 
 import time
-from datetime import datetime, timedelta
+from datetime import timedelta
+import datetime
 import os     # Executa comandos do sistema operacional Ex.: os.system('sudo reboot now'))
 import threading # Modulo superior Para executar as threads
 import sys
@@ -23,12 +24,50 @@ hs = time.strftime("%H:%M:%S") # Hora completa para registro de Log
 h = int(time.strftime('%H'))
 data = time.strftime('%d/%m/%y')
 
+
+def log(texto): # Metodo para registro dos eventos no log.txt (exibido na interface grafica)
+
+    hs = time.strftime("%H:%M:%S") 
+    data = time.strftime('%d/%m/%y')
+
+    texto = str(texto)
+
+    escrita = ("{} - {}  Evento:  {}\n").format(data, hs, texto)
+    escrita = str(escrita)
+
+    l = open("/var/www/html/log_qrcode.txt","a")
+    l.write(escrita)
+    l.close()
+    
+l = open("/var/www/html/log_qrcode.txt","a") # Pula uma linha no registro de log
+l.write("\n")
+l.close()
+
 nome = os.popen('hostname').readline()
+nome = str(nome)
+nome = nome.replace("\n","")
+
 ip = os.popen('hostname -I').readline()
+ip = str(ip)
+ip = ip.replace("\n","")
 
-print("\nNome desta maquina",nome,"com IP",ip)
+txt = ("Nome desta maquina",nome,"com IP",ip)
+txt = str(txt)
+txt = txt.replace("'","")
+txt = txt.replace(",","")
+txt = txt.replace("(","")
+txt = txt.replace(")","")
+txt = txt.replace("\n","")
+log(txt)
 
-print("Horario atual",time.strftime("%H:%M:%S"))
+txt = ("Horario atual",time.strftime("%H:%M:%S"))
+txt = str(txt)
+txt = txt.replace("'","")
+txt = txt.replace(",","")
+txt = txt.replace("(","")
+txt = txt.replace(")","")
+txt = txt.replace("\n","")
+log(txt)
 
 ############################ INICIA AS CLASSES DA Biblioteca_CMM_Bravas  ########################################
 
@@ -69,17 +108,20 @@ banco = cmm.Banco()
 notifica = cmm.Notifica()
 # Condfy - Aviso de QR Code utilizado Ex. notifica.qr_utilizado("2019","83587161") cliete,id do qr utilizado
 
-qr1_garagem = cmm.Qrcode("172.19.1.253","0001",4,"garagem_entrada","1") # IP,Cliente,rele,portao,notificar o condfy) - "172.18.34.247","5987",4,"social" ou "eclusa", "1" notificar o condfy do qrcode usado
-qr2_garagem = cmm.Qrcode("172.19.1.249","0001",5,"garagem_saida","0") # IP,Cliente,rele,portao) - "172.18.34.247","5987",4,"social" ou "eclusa"
+qr1_garagem = cmm.Qrcode("172.19.1.244","0001",4,"garagem_entrada","1") # IP,Cliente,rele,portao,notificar o condfy) - "172.18.34.247","5987",4,"social" ou "eclusa", "1" notificar o condfy do qrcode usado
+qr2_garagem = cmm.Qrcode("172.19.1.243","0001",5,"garagem_saida","0") # IP,Cliente,rele,portao) - "172.18.34.247","5987",4,"social" ou "eclusa"
 #qr3 = cmm.Qrcode("172.18.34.249","5987",4,"garagem_entrada") # IP,Cliente,rele,portao) - "172.18.34.247","5987",4,"garagem_entrada" ou "garagem_saida"
 #qr4 = cmm.Qrcode("172.18.34.250","5987",5,"garagem_saida") # IP,Cliente,rele,portao) - "172.18.34.247","5987",4,"garagem_entrada" ou "garagem_saida"
+
+################################### Escreve no log da interface grafica #########################
+
 
 
 ##############################################  Threads dos programas  ##########################################################
 
 def thread_qrcode_garagem_1(): # Programa que mantem a conexão com o QR Code
 
-    print("\nPrograma QR Code Garagem entrada em execução\n")
+    log("Programa QR Code Garagem entrada em execução")
 
     qr1_garagem.start() # Conecta com o leitor dentro da classe do QR Code
 
@@ -88,7 +130,7 @@ qr_garagem_entrada.start()
 
 def thread_qrcode_garagem_2(): # Programa que mantem a conexão com o QR Code
 
-    print("\nPrograma QR Code Garagem saida em execução\n")
+    log("Programa QR Code Garagem saida em execução")
 
     qr2_garagem.start() # Conecta com o leitor dentro da classe do QR Code
 
@@ -109,7 +151,7 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
     port_gerenciador = 5511# porta para receber dados do gerenciador
     
 
-##    print("Ouvindo Gerenciador na porta",port_gerenciador)
+##    log("Ouvindo Gerenciador na porta",port_gerenciador)
     
     while(1):
 
@@ -123,13 +165,24 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
             try:
                 s.bind((host_servidor, port_gerenciador))
             except socket.error as msg:
-                print ("Erro servidor gerenciador",msg)
+                txt = ("Erro servidor gerenciador",msg)
+                log(txt)
+                
             return s
 
         def setupConnection():
+            
             s.listen(10)
             conn, address = s.accept()
-            print ("Conectado com: " + address[0] + ":" + str(address[1]), "\n")
+            
+            txt = ("Conectado com: " + address[0] + ":" + str(address[1]))
+            txt = str(txt)
+            txt = txt.replace("'","")
+            txt = txt.replace(",","")
+            txt = txt.replace("(","")
+            txt = txt.replace(")","")            
+            log(txt)
+            
             return conn
 
         def dataTransfer(conn):  # Loop de transferencia e recepção de dados
@@ -141,7 +194,9 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
                     data = conn.recv(1024)  # Recebe o dado
                     data = data.decode('utf-8')
 
-                    print("dados recebidos",data)
+##                    log("dados recebidos")
+##                    log(data)
+                    
 
                     comando = (data.split("&")[0])
                     corpo = (data.split("&")[1])                   
@@ -152,49 +207,53 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
 
                 except Exception as err:
 
-                    print("Dados recebidos estao fora do formato",err)
+##                    txt = ("Dados recebidos estao fora do formato",err)
+##                    log(txt)
+                    
                     break
 
                 
     
                 if comando == "deletar_qr":
 
-                    print("\nReconheceu deletar")
+                    log("Reconheceu deletar")
 
                     
                     ID = corpo.split(":")[0]
 
-                    print("ID", ID)
+                    txt = ("ID", ID)
+                    log(txt)
                     
                     cliente = corpo.split(":")[1]
 
-                    print("cliente",cliente)
+                    txt =("cliente",cliente)
+                    log(txt)
                     
 
                     try:  # Tenta conectar com o banco de dados
                 
-                        print('Conectando banco de dados...')  
+                        log('Conectando banco de dados...')  
                         cnx = mysql.connector.connect(user='leandro',database='CMM', password='5510',host='localhost')
                         cursor = cnx.cursor()
-                        print('Conectado\n')
+                        log('Conectado\n')
                       
                     except mysql.connector.Error as err:
                         
                         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                           
-                            print("Alguma coisa esta errada com o nome de usuario ou a senha!")
+                            log("Alguma coisa esta errada com o nome de usuario ou a senha!")
                         
                         elif err.errno == errorcode.ER_BAD_DB_ERROR:
                           
-                            print("Esta base de dados nao existe")
+                            log("Esta base de dados nao existe")
                         
                         else:
                           
-                            print(err)
+                            log(err)
 
                     else:
 
-                        print("Vai tentar selecionar na tabela qrcode")
+                        log("Vai tentar selecionar na tabela qrcode")
 
                         query = ("SELECT * FROM qrcode")  # Seleciona a tabela qrcode
                         cursor.execute(query)
@@ -209,12 +268,12 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
                                                             
                             if (ID_recebido == ID): # Compara se o ID vindo do request e igual ao do banco   
 
-                                print("Achou o id no banco...")
+                                log("Achou o id no banco...")
                                 encontrou = 1                            
 
                     if encontrou == 0:
 
-                        print("id inexistente")
+                        log("id inexistente")
 
                     if encontrou == 1:
                                 
@@ -226,12 +285,15 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
                             
                         except Exception as err:  # mysql.connector.Error as err:
 
-                            print("Id inexistente",ID,err)
+                            txt = ("Id inexistente",ID,err)
+                            log(txt)
+                            
                             cnx.close()                            
 
                         else:
 
-                            print("ID",ID,"deletado do banco")
+                            txt = ("ID",ID,"deletado do banco")
+                            log(txt)
                             
                             break
 
@@ -246,14 +308,24 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
 
                     except Exception as err:
 
-                        print("Erro ao formatar os dados para converter em json", err)
+                        txt =("Erro ao formatar os dados para converter em json", err)
+                        log(txt)
 
                 
             #########  Faz o cadastro dos dados recebidos no banco do CMM #######
+
                     try:
 
-                        
-                        dados_json = json.loads(dados)  # Tranforma a string para formato json (dicionario)
+                        try:
+                            
+                            dados_json = json.loads(dados)  # Tranforma a string para formato json (dicionario)
+
+                        except:
+
+                            dados.update({'nome':'Nome com emoticons'})                            
+                            print(dados)
+                            dados_json = json.loads(dados)
+                            
                            
                         ID = str(dados_json["ID"])
                         
@@ -269,9 +341,26 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
                         hf = str(dados_json["hora_final"])
                         ds = str(dados_json["dias_semana"])
 
+                        l = open("/var/www/html/log_qrcode.txt","a") # Pula uma linha no registro de log
+                        l.write("\n")
+                        l.close()
+
+                        nome_editado = (dados_json["nome"])
+                        nome_editado = str(nome_editado)
+                        nome_editado = nome_editado.replace("b","")
+                        
+                        txt =("Cadastrar:",nome_editado,"Condominio",cond,"Apartamento",ap,"bloco",bloco,"Inicio em",di,"até",df,"das",hi,"até as",hf)
+                        txt = str(txt)
+                        txt = txt.replace("'","")
+                        txt = txt.replace(",","")
+                        txt = txt.replace("(","")
+                        txt = txt.replace(")","")
+                        log(txt)
+
                     except Exception as err:
 
-                        print("Erro na conversao json",err)
+                        txt =("Erro na conversao json",err)
+                        log(txt)
                                        
                     try:                 
   
@@ -282,15 +371,15 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
                         
                         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                           
-                            print("Alguma coisa esta errada com o nome de usuario ou a senha!")
+                            log("Alguma coisa esta errada com o nome de usuario ou a senha!")
                         
                         elif err.errno == errorcode.ER_BAD_DB_ERROR:
                           
-                            print("Esta base de dados nao existe")
+                            log("Esta base de dados nao existe")
                         
                         else:
                           
-                            print(err)
+                            log(err)
                     try:                        
                     
                         query = ("INSERT INTO qrcode (ID, nome, apartamento, bloco, cond, hora_inicio, hora_final, data_inicio, data_final, dias_semana) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
@@ -302,18 +391,25 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
 
                         if err.errno == 1062:
 
-                            print("ID duplicado")
+                            log("ID duplicado")
 
                             cnx.close()
                             break                            
                             
                         else:
 
-                            print("Erro na inclusão do banco",err)
+                            txt = ("Erro na inclusão do banco",err)
+                            log(txt)
                             
                     else:
 
-                        print("\ncadastrado com sucesso ",ID,"\n")                      
+                        txt = ("cadastrado com sucesso ID",ID)
+                        txt = str(txt)
+                        txt = txt.replace("'","")
+                        txt = txt.replace(",","")
+                        txt = txt.replace("(","")
+                        txt = txt.replace(")","")
+                        log(txt)
 
                         cnx.close()
                         break                
@@ -322,8 +418,15 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
 
         while True:
           
-          print ("\nEscutando Gerenciador na porta",port_gerenciador,"\n")
+          txt = ("Escutando Gerenciador na porta",port_gerenciador)
+          txt = str(txt)
+          txt = txt.replace("'","")
+          txt = txt.replace(",","")
+          txt = txt.replace("(","")
+          txt = txt.replace(")","")
+          log(txt)
           
+                    
           try:
 
               conn = setupConnection()
@@ -331,7 +434,7 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
                 
           except:
             
-              print("Encerrou conexão com Gerenciador")
+              log("Encerrou conexão com Gerenciador")
 
         
 
@@ -360,18 +463,19 @@ time.sleep(0.2) # Tempo para colocar as linhas impressas após as linhas de inic
 
 ##os.system("mpg123 nome.mp3") # Reproduz um arquivo mp3 , necessario instalar mpg123 (sudo apt-get install mpg123)
 
-##print ("\nTemperatura",temperatura.cpu(),"°C\n")  # obter temperatura
+##log ("\nTemperatura",temperatura.cpu(),"°C\n")  # obter temperatura
 
 ##email.enviar("O Programa acabou de reiniciar\nPosso enviar qualquer mensagem aqui...") # Não usar nenhum caracter especial na mensagem
 
 ##tempo = clima.clima_atual()
-##print(tempo)
+##log(tempo)
 
 ##evento.enviar_contact_id('E','132','001') # Evento ou Restauração / Evento / Setor
 
 ###################################################################################################
 
-sys.stdout.write("\nTemperatura " + str(temperatura.cpu()) + "°C\n")  # obter temperatura
+txt = ("Temperatura do processador " + str(temperatura.cpu()) + "°C")  # obter temperatura
+log(txt)
 
 
 
