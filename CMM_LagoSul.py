@@ -32,16 +32,28 @@ def log(texto): # Metodo para registro dos eventos no log.txt (exibido na interf
 
     texto = str(texto)
 
-    escrita = ("{} - {}  Evento:  {}\n").format(data, hs, texto)
-    escrita = str(escrita)
+    if texto == "*":
 
-    l = open("/var/www/html/log_qrcode.txt","a")
-    l.write(escrita)
-    l.close()
+        l = open("/var/www/html/log/log.txt","a")
+        l.write("\n")
+        l.close()
+
+    else:              
+
+        escrita = ("{} - {}  Evento:  {}\n").format(data, hs, texto)
+        escrita = str(escrita)
+
+        l = open("/var/www/html/log/log.txt","a")
+        l.write(escrita)
+        l.close()
     
 l = open("/var/www/html/log_qrcode.txt","a") # Pula uma linha no registro de log
 l.write("\n")
 l.close()
+
+log("*")
+log("Reiniciou o sistema")
+log("*")
 
 nome = os.popen('hostname').readline()
 nome = str(nome)
@@ -51,7 +63,7 @@ ip = os.popen('hostname -I').readline()
 ip = str(ip)
 ip = ip.replace("\n","")
 
-txt = ("Nome desta maquina",nome,"com IP",ip)
+txt = ("Nome desta maquina",nome) #,"com IP",ip)
 txt = str(txt)
 txt = txt.replace("'","")
 txt = txt.replace(",","")
@@ -175,13 +187,13 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
             s.listen(10)
             conn, address = s.accept()
             
-            txt = ("Conectado com: " + address[0] + ":" + str(address[1]))
-            txt = str(txt)
-            txt = txt.replace("'","")
-            txt = txt.replace(",","")
-            txt = txt.replace("(","")
-            txt = txt.replace(")","")            
-            log(txt)
+##            txt = ("Conectado com: " + address[0] + ":" + str(address[1]))
+##            txt = str(txt)
+##            txt = txt.replace("'","")
+##            txt = txt.replace(",","")
+##            txt = txt.replace("(","")
+##            txt = txt.replace(")","")            
+##            log(txt)
             
             return conn
 
@@ -403,7 +415,7 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
                             
                     else:
 
-                        txt = ("cadastrado com sucesso ID",ID)
+                        txt = ("Cadastrado com sucesso ID",ID)
                         txt = str(txt)
                         txt = txt.replace("'","")
                         txt = txt.replace(",","")
@@ -418,7 +430,8 @@ def Servidor_qr(): ######### Thread servidor Cadastro QR Code ##################
 
         while True:
           
-          txt = ("Escutando Gerenciador na porta",port_gerenciador)
+##          txt = ("Escutando Gerenciador na porta",port_gerenciador)
+          txt = ("Aguardando novos cadastros de QRCODE...")
           txt = str(txt)
           txt = txt.replace("'","")
           txt = txt.replace(",","")
