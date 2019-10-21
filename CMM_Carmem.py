@@ -1264,7 +1264,7 @@ def Arrombamento(Rele): # Inicia a thread arrombamento de portões
             abre_social = a.read()
             a.close()
 
-            if abre_social == "1": #pm1 == 1: # Se realmente foi um arrombamento liga sirene e notifica o Moni
+            if abre_social == "0": #pm1 == 1: # Se realmente foi um arrombamento liga sirene e notifica o Moni
 
                 log("Arrombamento do portão social")
                 os.system("mpg123 /home/pi/CMM/mp3/violacao_social.mp3")
@@ -1290,40 +1290,40 @@ def Arrombamento(Rele): # Inicia a thread arrombamento de portões
 
                 
 
-        if pm2 == 1 and ar2 == 0:
-
-            time.sleep(1) # Filtra algum possivel ruido de até 500 milissegundos
-
-            b = open("/home/pi/CMM/status_eclusa.cmm","r")
-            abre_eclusa = b.read()
-            b.close()
-
-            if abre_eclusa: #pm2 == 1: # Se realmente foi um arrombamento liga sirene e notifica o Moni
-
-                log("Arrombamento do portão Eclusa")
-                os.system("mpg123 /home/pi/CMM/mp3/violacao_eclusa.mp3")
-                rele.liga(8)
-                evento.enviar("E","120","004")
-                
-                ar2 = 1
-                reset_ar2 = 1
-
-        if ar2 == 1 and reset_ar2 == 1:
-
-            cont2 = cont2 - 1 # A primeira vez que acontece o arrombamento reseta depois de 30 segundos
-            time.sleep(1)
-
-            if cont2 <= 0:
-
-                evento.enviar("R","120","004")
-
-                cont2 = 60 # Se apos o reset o portão continuar aberto envia o evento novamente  espera 60 segundos
-                ar2 = 0
-                reset_ar2 = 0
-                rele.desliga(8)
-
-        
-        time.sleep(2)   
+##        if pm2 == 1 and ar2 == 0:
+##
+##            time.sleep(1) # Filtra algum possivel ruido de até 500 milissegundos
+##
+##            b = open("/home/pi/CMM/status_eclusa.cmm","r")
+##            abre_eclusa = b.read()
+##            b.close()
+##
+##            if abre_eclusa == "0": #pm2 == 1: # Se realmente foi um arrombamento liga sirene e notifica o Moni
+##
+##                log("Arrombamento do portão Eclusa")
+##                os.system("mpg123 /home/pi/CMM/mp3/violacao_eclusa.mp3")
+##                rele.liga(8)
+##                evento.enviar("E","120","004")
+##                
+##                ar2 = 1
+##                reset_ar2 = 1
+##
+##        if ar2 == 1 and reset_ar2 == 1:
+##
+##            cont2 = cont2 - 1 # A primeira vez que acontece o arrombamento reseta depois de 30 segundos
+##            time.sleep(1)
+##
+##            if cont2 <= 0:
+##
+##                evento.enviar("R","120","004")
+##
+##                cont2 = 60 # Se apos o reset o portão continuar aberto envia o evento novamente  espera 60 segundos
+##                ar2 = 0
+##                reset_ar2 = 0
+##                rele.desliga(8)
+##
+##        
+##        time.sleep(2)   
 
 
 def Servidor(Rele): ######### Thread servidor Cadastro QR Code ###################
@@ -2197,7 +2197,7 @@ abre = Abre()
 
 entradas = threading.Thread(target=Entradas)
 sociais = threading.Thread(target=Portoes_sociais, args=(Rele,)) # deixar virgula depois do arg 1
-##arrombamento = threading.Thread(target=Arrombamento, args=(Rele,))
+arrombamento = threading.Thread(target=Arrombamento, args=(Rele,))
 servidor = threading.Thread(target=Servidor, args=(Rele,))
 buffer = threading.Thread(target=Buffer)
 
@@ -2211,7 +2211,7 @@ qrcode2 = threading.Thread(target=thread_qrcode2)
 ######################################### Start dos Programas  #############################################################
 
 sociais.start() # Inicia o programa dos portões sociais
-##arrombamento.start() # Inicia o programa de automação
+arrombamento.start() # Inicia o programa de automação
 servidor.start() # Inicia o programa de automação
 buffer.start() # Inicia o programa Buffer
 
