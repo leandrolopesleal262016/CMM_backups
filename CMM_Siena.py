@@ -15,6 +15,8 @@ import threading # Modulo superior Para executar as threads
 import sys
 import socket
 import _thread as thread
+import json
+import mysql.connector
 
 socket.setdefaulttimeout(2) # limite de 2 segundos para enviar o socket
 
@@ -45,25 +47,26 @@ def log(texto): # Metodo para registro dos eventos no log.txt (exibido na interf
         l = open("/var/www/html/log/log.txt","a")
         l.write(escrita)
         l.close()
-
-log("*") # Deixa uma linha em branco no log da interface    
-log("Reiniciou o sistema")
-
-
-os.system("mpg123 /home/pi/CMM/mp3/sistema_carregado.mp3") 
-
+        
 # Imprimi o nome e o IP do equipamento no log da interface
+
 nome = os.popen('hostname').readline()
 nome = str(nome)
 nome = nome.replace("\n","")
 ip = os.popen('hostname -I').readline()
 ip = str(ip)
 ip = ip.replace("\n","")
-txt = ("Nome desta maquina",nome,"com IP",ip)
+txt = ("Nome desta maquina",nome) #,"com IP",ip)
 txt = str(txt)
-
 log(txt)
 log("*") # pula uma linha no log
+log("*") # Deixa uma linha em branco no log da interface
+
+log("Reiniciou o sistema")
+
+os.system("mpg123 /home/pi/CMM/mp3/sistema_carregado.mp3") 
+
+
 
 
 ############################ INICIA AS CLASSES DA biblioteca_CMM ###############################################
@@ -78,58 +81,33 @@ saidas = cmm.Saidas()  # Classe para acionamento dos reles e saidas transistoriz
 evento = cmm.Evento("6639") # Inicia a classe evento com o codigo do cliente
 banco = cmm.Banco() # Oprerações CRUD no banco CMM
 
-qr2 = cmm.Qrcode("172.18.36.243","6639",1,"social","1","1","acesso_qr.mp3") # IP,Cliente,rele,portao,notifica) - "172.18.34.247","5987",4,"social" ou "eclusa"
-qr1 = cmm.Qrcode("172.18.36.245","6639",1,"eclusa","0","2","acesso_qr.mp3") # IP,Cliente,rele,portao,notifica) - "172.18.34.247","5987",4,"social" ou "eclusa" 172.18.36.245","6639
-qr3 = cmm.Qrcode("172.18.36.247","6639",3,"eclusa","0","3","acesso_qr.mp3") # IP,Cliente,rele,portao,notifica) - "172.18.34.247","5987",4,"social" ou "eclusa"
-qr4 = cmm.Qrcode("172.18.36.248","6639",3,"eclusa","0","4","acesso_qr.mp3") # IP,Cliente,rele,portao,notifica) - "172.18.34.247","5987",4,"social" ou "eclusa"
+##qr1 = cmm.Qrcode("172.18.36.245","6639",1,"social","1","1","acesso_qr.mp3") # IP,Cliente,rele,portao,notifica,leitor,mensagem) - "172.18.34.247","5987",4,"social" ou "eclusa" 172.18.36.245","6639
+##qr2 = cmm.Qrcode("172.18.36.243","6639",1,"social","1","2","acesso_qr.mp3") # IP,Cliente,rele,portao,notifica,leitor,mensagem) - "172.18.34.247","5987",4,"social" ou "eclusa" 172.18.36.243
+##qr3 = cmm.Qrcode("172.18.36.247","6639",3,"eclusa","0","3","acesso_qr.mp3") # IP,Cliente,rele,portao,notifica,leitor,mensagem) - "172.18.34.247","5987",4,"social" ou "eclusa"
+##qr4 = cmm.Qrcode("172.18.36.248","6639",3,"eclusa","0","4","acesso_qr.mp3") # IP,Cliente,rele,portao,notifica,leitor,mensagem) - "172.18.34.247","5987",4,"social" ou "eclusa" 172.18.36.248
 
-# 172.20.9.5 IP qrcode bancada
+# 172.20.9.5 IP qrcode bancada 172.18.36.247
 
 ############################## Intertravamento dos portões sociais #############################################
 
-def thread_qrcode1(): # Programa do QR Code 1
-
-    log("Programa QR Code social entrada em execução")
-
-    qr1.start() # Inicia o qr code do portão social    
-
-def thread_qrcode2(): # Programa do QR Code 2
-
-    log("Programa QR Code social saida em execução")
-
-    qr2.start() # Inicia o qrcode do portão da eclusa
-    
-def thread_qrcode3(): # Programa do QR Code 3
-
-    log("Programa QR Code eclusa entrada em execução")
-
-    qr3.start() # Inicia o qrcode do portão da eclusa
-
-def thread_qrcode4(): # Programa do QR Code 4
-
-    log("Programa QR Code eclusa saida em execução")
-
-    qr4.start() # Inicia o qrcode do portão da eclusa
-
-def servidor_gerenciador():
+def Servidor_qr(): ######### Thread servidor Cadastro QR Code ###################
 
     time.sleep(1)
-
-    socket.setdefaulttimeout(999999)
 
     deletar = 0
     cadastrar = 0
 
-    host_servidor = '172.18.36.252'  # Host servidor SEA (PHP e moni como clientes)
-    port_gerenciador = 5511# Servidor para receber dados do gerenciador
+    host_servidor = '172.18.36.252'  # Host servidor 
+    port_gerenciador = 5511# porta para receber dados do gerenciador
     
 
     print("Ouvindo Gerenciador na porta",port_gerenciador)
     
     while(1):
 
-        hs = time.strftime("%H:%M:%S") # MANTEM ATUALIZADO O HORARIO DO REGISTRO DE LOG
-        
+        socket.setdefaulttimeout(9999)
+
+        hs = time.strftime("%H:%M:%S") # MANTEM ATUALIZADO O HORARIO DO REGISTRO DE LOG        
               
         def setupServer():
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # "AF_NET" trabalharemos com protocolo ipv4, .SOCK_STREAM USAREMOS TCP
@@ -137,15 +115,17 @@ def servidor_gerenciador():
             try:
                 s.bind((host_servidor, port_gerenciador))
             except socket.error as msg:
-                print ("Erro servidor gerenciador",msg)
+                txt = ("Erro servidor gerenciador",msg)
+                log(txt)
+                
             return s
 
         def setupConnection():
-            s.listen(2)
-            conn, address = s.accept()
-            print ("Conectado com: " + address[0] + ":" + str(address[1]), "\n")
+            
+            s.listen(10)
+            conn, address = s.accept()           
+            
             return conn
-
 
         def dataTransfer(conn):  # Loop de transferencia e recepção de dados
             
@@ -156,15 +136,12 @@ def servidor_gerenciador():
                     data = conn.recv(1024)  # Recebe o dado
                     data = data.decode('utf-8')
 
-
-                    print("dados recebidos",data)
+##                    log("dados recebidos")
+##                    log(data)
+                    
 
                     comando = (data.split("&")[0])
-                    print("Comando", comando)
-
-                    corpo = (data.split("&")[1])
-                    print("Corpo",corpo)
-                    
+                    corpo = (data.split("&")[1])                   
 
                     reply = "ok"
                     conn.sendall(str.encode(reply))  # Envia o reply de volta para o cliente  
@@ -172,230 +149,222 @@ def servidor_gerenciador():
 
                 except Exception as err:
 
-                    print("Dados recebidos estao fora do formato",err)
-                    break
-
-                try:
+                    txt = ("Dados recebidos estao fora do formato",err)
+                    log(txt)                    
+                    break                
     
-                    if comando == "deletar_qr":
+                if comando == "deletar_qr":
 
-                        print("\nReconheceu deletar")
-
-                        
-                        ID = corpo.split(":")[0]
-
-                        print("ID", ID)
-                        
-                        cliente = corpo.split(":")[1]
-
-                        print("cliente",cliente)
-                        
-
-                        try:  # Tenta conectar com o banco de dados
+                    log("Reconheceu deletar")
                     
-                            print('Conectando banco de dados...')  
-                            cnx = mysql.connector.connect(user='leandro',database='CMM', password='5510',host='localhost')
-                            cursor = cnx.cursor()
-                            print('Conectado\n')
-                          
-                        except mysql.connector.Error as err:
-                            
-                            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                              
-                                print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-                            
-                            elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                              
-                                print("Esta base de dados nao existe")
-                            
-                            else:
-                              
-                                print(err)
-
-                        else:
-
-                            query = ("SELECT * FROM qrcode")  # Seleciona a tabela qrcode
-                            cursor.execute(query)
-
-                            encontrou = 0
+                    ID = corpo.split(":")[0]
+                    txt = ("ID", ID)
+                    log(txt)
                     
-                        for i in cursor:
+                    cliente = corpo.split(":")[1]
 
-                            if encontrou == 0:
-                                   
-                                ID_recebido = str(i[0]) # Seleciona o primeiro item da lista recebida do banco (ID)
+                    txt =("cliente",cliente)
+                    log(txt)                    
 
-                                                                
-                                if (ID_recebido == ID): # Compara se o ID vindo do request e igual ao do banco   
+                    try:  # Tenta conectar com o banco de dados
+                
+                        log('Conectando banco de dados...')  
+                        cnx = mysql.connector.connect(user='leandro',database='CMM', password='5510',host='localhost')
+                        cursor = cnx.cursor()
+                        log('Conectado\n')
+                      
+                    except Exception as err:
+                        
+                        log(err)
 
-                                    print("Achou o id no banco...")
+                    else:
 
-                                    encontrou = 1
-                                
+                        log("Vai tentar selecionar na tabela qrcode")
+
+                        query = ("SELECT * FROM qrcode")  # Seleciona a tabela qrcode
+                        cursor.execute(query)
+
+                        encontrou = 0
+                
+                    for i in cursor:
 
                         if encontrou == 0:
-
-                            print("id inexistente")
-
-                        if encontrou == 1:
-                                    
-                            try:
-                                
-                            
-                                query = ("DELETE FROM qrcode WHERE ID = %s")%ID
-                                cursor.execute(query)
-                                cnx.commit()
-                                   
-                                
-                            except Exception as err:  # mysql.connector.Error as err:
-
-
-                                print("Id inexistente",ID,err)
-                                cnx.close()
-                                
-
-                            else:
-
-
-                                print("ID",ID,"deletado do banco")
-                                
-                                ID = str(ID)
-                                cliente = str(cliente)
-                            
-                                arquivo = open("qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
-                                arquivo.write(" Evento: Deletado QR Code " + "ID" + ID + hs + "\n")
-                                arquivo.close()
-
-                                break
-
-                        break
-                        
-                    if comando == "cadastrar_qr":
-
-                        try:
-
-                            print("\nReconheceu cadastrar qrcode")
-                           
-                            dados = data.replace("cadastrar_qr&","")
-                            dados = dados.replace("'",'"')
-                            
-##                            print("Dados convertidos: ", dados)
-
-                        except Exception as err:
-
-                            print("Erro ao formatar os dados para converter em json", err)
-
-                    
-                #########  Faz o cadastro dos dados recebidos no banco do CMM #######
-                        try:
-
-##                            dados = dados.encode('utf-8')
-####                            dados = json.dumps(dados)
-##                            dados = str(dados)
-##                            print(dados,type(dados))
-##                            dados_json = dados.encode('utf-8')
-##                            dados = dados.encode('unicode-escape')
-                            
-                            dados_json = json.loads(dados)  # Tranforma a string para formato json (dicionario)
-##                            print(dados_json)
                                
-                            ID = str(dados_json["ID"])
-                            
-                            nome = (dados_json["nome"])
-                            nome = nome.encode('utf-8')
-                            
-                            ap = str(dados_json["apartamento"])
-                            bloco = str(dados_json["bloco"])
-                            cond = str(dados_json["condominio"])
-                            di = str(dados_json["data_inicio"])
-                            df = str(dados_json["data_final"])
-                            hi = str(dados_json["hora_inicio"])
-                            hf = str(dados_json["hora_final"])
-                            ds = str(dados_json["dias_semana"])
+                            ID_recebido = str(i[0]) # Seleciona o primeiro item da lista recebida do banco (ID)
+                                                            
+                            if (ID_recebido == ID): # Compara se o ID vindo do request e igual ao do banco   
 
-##                            nome = nome.encode("utf-8")
+                                log("Achou o id no banco...")
+                                encontrou = 1                            
 
-                        except Exception as err:
+                    if encontrou == 0:
 
-                            print("Erro na conversao json",err)
+                        log("id inexistente")
 
-                                           
-                        try:  # Tenta conectar com o banco de dados
-                    
-                            print('Conectando banco de dados...')  
-                            cnx = mysql.connector.connect(user='leandro',database='CMM', password='5510',host='localhost')
-                            cursor = cnx.cursor()
-                            print('Conectado\n')
-                          
-                        except mysql.connector.Error as err:
-                            
-                            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                              
-                                print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-                            
-                            elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                              
-                                print("Esta base de dados nao existe")
-                            
-                            else:
-                              
-                                print(err)
-                        try:
-                            
+                    if encontrou == 1:
+                                
+                        try:                            
                         
-                            query = ("INSERT INTO qrcode (ID, nome, apartamento, bloco, cond, hora_inicio, hora_final, data_inicio, data_final, dias_semana) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
-                            query_data = (ID,nome,ap,bloco,cond,hi,hf,di,df,ds)
-                            cursor.execute(query, query_data)
-                            cnx.commit()
-
+                            query = ("DELETE FROM qrcode WHERE ID = %s")%ID
+                            cursor.execute(query)
+                            cnx.commit()                               
                             
-                        except mysql.connector.Error as err:
+                        except Exception as err:  # mysql.connector.Error as err:
 
-
-                            if err.errno == 1062:
-
-                                print("ID duplicado")
-
-                                cnx.close()
-                                break
-                                
-                                
-                            else:
-
-                                print("Erro na inclusão do banco",err)
+                            txt = ("Id inexistente",ID,err)
+                            log(txt)
+                            
+                            cnx.close()                            
 
                         else:
 
-
-                            print("\ncadastrado com sucesso ",ID)
-
-                            arquivo = open("qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
-                            arquivo.write(" Evento: Deletado QR Code " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
-                            arquivo.close()
-
-                            cnx.close()
+                            txt = ("ID",ID,"deletado do banco")
+                            log(txt)                            
                             break
+                    break
+                    
+                if comando == "cadastrar_qr":
 
-                except Exception as e:
+                    try:
+                       
+                        dados = data.replace("cadastrar_qr&","")
+                        dados = dados.replace("'",'"')
 
-                    print("Erro na rotina cadastrar ou deletar")
+                    except Exception as err:
+
+                        txt =("Erro ao formatar os dados para converter em json", err)
+                        log(txt)
+                
+                  #  Faz o cadastro dos dados recebidos no banco do CMM #
+
+                    try:
+
+                        try:
+                            
+                            dados_json = json.loads(dados)  # Tranforma a string para formato json (dicionario)
+
+                        except:
+
+                            dados.update({'nome':'Nome com emoticons'})                            
+                            print(dados)
+                            dados_json = json.loads(dados)
+                            
+                           
+                        ID = str(dados_json["ID"])
+                        
+                        nome = (dados_json["nome"])
+                        nome = nome.encode('utf-8')
+                        
+                        ap = str(dados_json["apartamento"])
+                        bloco = str(dados_json["bloco"])
+                        cond = str(dados_json["condominio"])
+                        di = str(dados_json["data_inicio"])
+                        df = str(dados_json["data_final"])
+                        hi = str(dados_json["hora_inicio"])
+                        hf = str(dados_json["hora_final"])
+                        ds = str(dados_json["dias_semana"])
+
+                        l = open("/var/www/html/log_qrcode.txt","a") # Pula uma linha no registro de log
+                        l.write("\n")
+                        l.close()
+
+                        nome_editado = (dados_json["nome"])
+                        nome_editado = str(nome_editado)
+                        nome_editado = nome_editado.replace("b","")
+
+                        log("*")
+                        txt =("Cadastrar:",nome_editado,"Condominio",cond,"Apartamento",ap,"bloco",bloco,"Inicio em",di,"até",df,"das",hi,"até as",hf)
+                        txt = str(txt)
+                        txt = txt.replace("'","")
+                        txt = txt.replace(",","")
+                        txt = txt.replace("(","")
+                        txt = txt.replace(")","")
+                        log(txt)
+
+                    except Exception as err:
+
+                        txt =("Erro na conversao json",err)
+                        log(txt)
+                                       
+                    try:                 
+  
+                        cnx = mysql.connector.connect(user='leandro',database='CMM', password='5510',host='localhost')
+                        cursor = cnx.cursor()
+                      
+                    except Exception as err:
+                        
+                        log(err)
+                        
+                    try:                        
+                    
+                        query = ("INSERT INTO qrcode (ID, nome, apartamento, bloco, cond, hora_inicio, hora_final, data_inicio, data_final, dias_semana) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+                        query_data = (ID,nome,ap,bloco,cond,hi,hf,di,df,ds)
+                        cursor.execute(query, query_data)
+                        cnx.commit()
+                        
+                    except Exception as err:
+
+                        txt = ("Erro na inclusão do banco",err)
+                        log(txt)
+                            
+                    else:
+
+                        txt = ("Cadastrado com sucesso ID",ID)
+                        txt = str(txt)
+                        txt = txt.replace("'","")
+                        txt = txt.replace(",","")
+                        txt = txt.replace("(","")
+                        txt = txt.replace(")","")
+                        log(txt)
+                        log("*")
+
+                        cnx.close()
+                        break                
                  
         s = setupServer()
 
-        while True:
-          
-          print ("\nEscutando Gerenciador na porta",port_gerenciador,"\n")
-          
+        while True:          
+
+          txt = ("Aguardando novos cadastros de QRCODE...")
+          txt = str(txt)
+          txt = txt.replace("'","")
+          txt = txt.replace(",","")
+          txt = txt.replace("(","")
+          txt = txt.replace(")","")
+          log(txt)          
+                    
           try:
 
               conn = setupConnection()
-              dataTransfer(conn) #,saidaA,saidaB,hs)
-                                         
+              dataTransfer(conn)                                         
                 
           except:
             
-              print("Encerrou conexão com Gerenciador")
+              log("Encerrou conexão com Gerenciador")
 
+##def thread_qrcode1(): # Programa do QR Code 1
+##
+##    log("Programa QR Code social entrada em execução")
+##
+##    qr1.start() # Inicia o qr code do portão social    
+##
+##def thread_qrcode2(): # Programa do QR Code 2
+##
+##    log("Programa QR Code social saida em execução")
+##
+##    qr2.start() # Inicia o qrcode do portão da eclusa
+##    
+##def thread_qrcode3(): # Programa do QR Code 3
+##
+##    log("Programa QR Code eclusa entrada em execução")
+##
+##    qr3.start() # Inicia o qrcode do portão da eclusa
+##
+##def thread_qrcode4(): # Programa do QR Code 4
+##
+##    log("Programa QR Code eclusa saida em execução")
+##
+##    qr4.start() # Inicia o qrcode do portão da eclusa
 
 
 def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a classe Rele
@@ -441,6 +410,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
 
                     rele.liga(5) # Aqui abrimos o contato da eclusa para impedir que ela seja aberta enquanto o social esta aberto
                     
+                    log("*")
                     txt = ("Abrindo portão Social")
                     log(txt)
                     abre.social()
@@ -449,7 +419,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
 
                         os.system("mpg123 /home/pi/CMM/mp3/abrindo_social.mp3")                   
                     
-                    time.sleep(2) # Tempo minimo para o portão abrir
+                    time.sleep(1) # Tempo minimo para o portão abrir
 
                     entradas = cmm.Entradas()
                     pm1 = entradas.pm1
@@ -468,8 +438,8 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
 
                         evento.enviar("E","133","001") # Envia abriu portão
                         
-                        contador = 300 # Tempo maximo para o social ficar aberto 30 segundos
-                        log("Esperando por 15 segundos o portão social fechar...")
+                        contador = 200 # Tempo maximo para o social ficar aberto 300 = 30 segundos
+                        log("Esperando portão social fechar...")
 
                         while contador > 0: # enquanto portão está aberto
 
@@ -551,7 +521,8 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                     s.close()
 
                     rele.liga(6) # Impede o social de abrir enquanto a eclusa esta aberta
-                    
+
+                    log("*")                    
                     txt = ("Abrindo portão Eclusa")
                     log(txt)
                     abre.eclusa()
@@ -560,7 +531,7 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                     if audio == 1:
                         os.system("mpg123 /home/pi/CMM/mp3/abrindo_eclusa.mp3")
                     
-                    time.sleep(2) # Tempo de espera para o portão abrir
+                    time.sleep(1) # Tempo de espera para o portão abrir
 
                     entradas = cmm.Entradas()
                     pm2 = entradas.pm2
@@ -579,8 +550,8 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
 
                         evento.enviar("E","133","003") # Envia abertura
                         
-                        contador = 300 # Tempo maximo para eclusa ficar aberta 30 segundos
-                        log("Esperando por 30 segundos o portão Eclusa fechar...")
+                        contador = 200 # Tempo maximo para eclusa ficar aberta 30 segundos
+                        log("Esperando portão Eclusa fechar...")
 
                         while contador > 0: # enquanto portão está aberto
 
@@ -798,8 +769,8 @@ class Abre(cmm.Rele): # classe abertura dos portoes registrando no arquivo de co
         status.write("1")
         status.close()
 
-        rele.pulso(1,2) # Pulso para abrir direto o portão sem intertravamento (Social)
-        log("Abrindo social...")
+        rele.pulso(1,3) # Pulso para abrir direto o portão sem intertravamento (Social)
+##        log("Abrindo social...")
         
     def eclusa(self):
 
@@ -807,8 +778,8 @@ class Abre(cmm.Rele): # classe abertura dos portoes registrando no arquivo de co
         status.write("1")
         status.close()        
     
-        rele.pulso(3,2) # Pulso para abrir direto o portão sem intertravamento (Eclusa)
-        log("Abrindo eclusa...")
+        rele.pulso(3,3) # Pulso para abrir direto o portão sem intertravamento (Eclusa)
+##        log("Abrindo eclusa...")
         
 ########################################## Métodos de acesso a classe leitor #####################################
 
@@ -875,6 +846,8 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
     
 
     banco = cmm.Banco()
+    em_mudanca = 0
+    aberto = 0
             
     while(1):
 
@@ -883,8 +856,74 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
     
         ihm_gar1 = banco.consulta("comandos","abre_garagem") # Valor inserido pelo botão da interface       
         tx1 =  leitor("leitor1_in3")  # Cantato abre vindo do TX (LINEAR HCS)
-                
-        if (tx1 == 1 or ihm_gar1 == "1"):    # Se o tx ou o botão da interface mandou abrir o portão
+
+        mudanca = banco.consulta("comandos","mudanca")
+        
+        if mudanca == "1" and em_mudanca == 0:
+
+            log("*")
+            log("Chave de mudança acionada")
+
+            s.liga_rele3_exp1() # Sinal Verde
+
+            evento.enviar("E","132","025") 
+
+            s.liga_rele1_exp1() # Aciona o rele 1 do modulo 1 (Abre)
+            time.sleep(2)
+            s.desliga_rele1_exp1()
+            time.sleep(1)
+            s.liga_rele2_exp1() # Aciona o rele 2 do modulo 1 (Foto)
+            
+            em_mudanca = 1
+
+        if mudanca == "0" and em_mudanca == 1:
+            
+            log("Chave de mudança desligada")
+
+            s.desliga_rele3_exp1() # Sinal Vermelho
+            evento.enviar("R","132","025")
+                            
+            s.desliga_rele1_exp1() # Desliga o rele 1 do modulo 1 (Abre)
+            s.desliga_rele2_exp1() # Desliga o rele 2 do modulo 1 (Foto) 
+
+            pmg1 = leitor("leitor1_in1")
+
+            cont = 30 # Tempo maximo de espera
+
+            log("Aguardando Garagem fechar após a mudança...")
+
+            while cont > 0:
+
+                pmg1 = leitor("leitor1_in1")
+
+                if(cont == 1): # 30 segundos e não fechou                                      
+
+                    log("Obstruçao do fechamento do portao, enviar evento aqui")
+                        
+                if (pmg1 == 1): # Portão ja fechou
+
+                    log("Portão fechou")
+
+                    s.desliga_rele3_exp1() # Sinal Vermelho
+
+                    t = open("/home/pi/CMM/status_garagem_1.cmm","w")
+                    t.write("0")
+                    t.close()
+                    
+                    cont = 0
+                    mudanca1 = 0
+                    time.sleep(1)
+                    
+                time.sleep(1)
+                cont = cont - 1
+
+            em_mudanca = 0
+            
+        if (tx1 == 1 or ihm_gar1 == "1" and em_mudanca == 0):    # Se o tx ou o botão da interface mandou abrir o portão
+
+            status = open("/home/pi/CMM/status_garagem_1.cmm","w") 
+            status.write("1")
+            status.close()
 
             time.sleep(0.1)
 
@@ -898,6 +937,7 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                 if tx1 == 1:
 
+                    log("*")
                     log("Reconheceu tx Garagem") # Se reconheceu o tx, é porque o portão ja esta abrindo
 
                     s.liga_rele3_exp1() # Sinal Verde (Sinaleira)    
@@ -979,6 +1019,7 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                                 time.sleep(1)
 
+                                aberto = 0
                                 
                                 cont = 0
                                 break
@@ -991,15 +1032,32 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                                     log("Acionou a barreira Garagem")
 
-                                    while bar1 == 1: # Enquanto a barreira esta acionada
+                                    tempo = 30
+
+                                    while tempo > 0: # Enquanto a barreira esta acionada
 
                                         bar1 = leitor("leitor1_in2") # Faz a leitura da barreira 1
 
-                                        # Alguem esta na frente da barreira
+##                                        print("Alguem esta na frente da barreira")                                        
 
-                                        time.sleep(0.1)
+
+                                        if bar1 == 1:
+
+                                            time.sleep(0.1)
+
+##                                            print("Esperando sair da barreira...")
+
+                                        if bar1 == 0:
+
+                                            time.sleep(0.1)
+
+##                                            print("Saiu da barreira")
+                                            break
+
+                                        tempo = tempo - 1
+                                        time.sleep(1)
                                         
-        ##                                log("Passou alguem, verificando dupla passagem...")
+##                                        print("Passou alguem, verificando dupla passagem...")
 
                                     s.desliga_rele3_exp1() # Sinal Vermelho
                                     
@@ -1011,17 +1069,19 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                                         log("Aguardando portão Garagem fechar")
 
-                                        temp = 300
+                                        temp = 30
 
-                                        while temp > 30:  # Enquanto o portão ainda está aberto e tempo menor que 30 seg                         
+                                        while temp > 0:  # Enquanto o portão ainda está aberto e tempo menor que 30 seg                         
 
+                                            aberto = 1
+                                            
                                             pmg1 = leitor("leitor1_in1") # Faz a leitura do ponto magnetico
                                             bar1 = leitor("leitor1_in2") # Faz a leitura da barreira 1
                                             tx1 =  leitor("leitor1_in3")  # Cantato abre vindo do TX (LINEAR HCS)  
 
                                             if bar1 == 1: # Dupla passagem
 
-                                                time.sleep(0.2)
+                                                time.sleep(0.1)
                                                 bar1 = leitor("leitor1_in2")
 
                                                 if bar1 == 1:
@@ -1038,26 +1098,39 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
 
                                             if tx1 == 1: # Alguem acionou o controle enquanto o portão fechava
 
-                                                log("Reconheceu abre Garagem enquanto o portão estava aberto")
-                                                
-                                                s.liga_rele3_exp1() # Sinal Verde
+                                                time.sleep(0.1)
+                                                tx1 =  leitor("leitor1_in3")
 
-                                                temp = 0
-                                                
-                                                break # Sai da função e inicia novamente a verificação
+                                                if tx1 == 1:
+
+                                                    log("Reconheceu abre Garagem enquanto o portão estava aberto")                                                    
+                                                    s.liga_rele3_exp1() # Sinal Verde
+                                                    temp = 0
+                                                    
+                                                    break # Sai da função e inicia novamente a verificação
 
 ##                                            
                                      
                                             if pmg1 == 1: # portão ja fechou
 
-                                                log("Portão Garagem fechou")
-                                                s.desliga_rele3_exp1() # Sinal vermelho
-                                                break
+                                                time.sleep(0.1)
+                                                pmg1 = leitor("leitor1_in1")
+
+                                                if pmg1 == 1:
+
+                                                    log("Portão Garagem fechou")
+
+                                                    aberto = 0
+                                                    
+                                                    s.desliga_rele3_exp1() # Sinal vermelho
+                                                    break
 
                                             temp = temp - 1
                                             time.sleep(0.1)
 
-##                                    time.sleep(1)                                
+                                        if aberto == 1:
+
+                                            print("Portão aberto por muito tempo")
 
                             cont = cont - 1
                             time.sleep(0.1)
@@ -1076,6 +1149,11 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
                         
                         cont = 0
                         break
+                    
+            status = open("/home/pi/CMM/status_garagem_1.cmm","w") 
+            status.write("0")
+            status.close()
+            
         time.sleep(0.1)
         
 def Garagem2(Rele): # Inicia a thread do portão da garagem importando a classe Rele
@@ -1549,122 +1627,112 @@ def Servidor(Rele,Abre):
 def Alarmes_garagem_1(Rele):
     
     log("Programa Alarmes Garagem em execução")
-
-    mudanca1 = 0
+    em_mudanca = 0
+    confirmada_mudanca = 0
+    confirmada_desliga_mudanca = 0
     
     while(1):         
 
         s = cmm.Expansor()
-
-        pmg1 = leitor("leitor1_in1") # Ponto magnetico portão leitor 1 entrada 1      
+        
+##        mudanca = banco.consulta("comandos","mudanca")      
         mud1 = leitor("leitor1_in4")  # Chave de mudança
+        pmg1 = leitor("leitor1_in1")
 
-        t = open("/home/pi/CMM/status_garagem_1.cmm","r")
-        status_tx1 = t.read()
-        t.close()
-                
-
-        if mud1 == 1 and mudanca1 == 0: # Chave de mudança acionada
-
-            time.sleep(0.1)
-
-            pmg1 = leitor("leitor1_in1") # Ponto magnetico portão leitor 1 entrada 1      
-            mud1 = leitor("leitor1_in4")  # Chave de mudança            
-
-            if mud1 == 1 and mudanca1 == 0:    
-
-                log("Chave de mudança acionada Garagem")
-
-                s.liga_rele3_exp1() # Sinal Verde
-
-                evento.enviar("E","132","25")                
-
-                t = open("/home/pi/CMM/status_garagem_1.cmm","w")
-                t.write("1")
-                t.close()
-
-                s.liga_rele1_exp1() # Aciona o rele 1 do modulo 1 (Abre)
-                time.sleep(2)
-                s.desliga_rele1_exp1()
-                s.liga_rele2_exp1() # Aciona o rele 2 do modulo 1 (Foto)                
-
-                mudanca1 = 1
-
-        if mud1 == 0 and mudanca1 == 1:
-
-            time.sleep(0.1)
-            mud1 = leitor("leitor1_in4")
-
-            if mud1 == 0:
-
-                log("Desligada a chave de mudança")
-
-                s.desliga_rele3_exp1() # Sinal Vermelho
-
-                evento.enviar("R","132","25")
-                                
-                s.desliga_rele1_exp1() # Desliga o rele 1 do modulo 1 (Abre)
-                s.desliga_rele2_exp1() # Desliga o rele 2 do modulo 1 (Foto) 
-
-                pmg1 = leitor("leitor1_in1")
-
-                cont = 30 # Tempo maximo de espera
-
-                log("Aguardando portão Garagem fechar depois da mudanca")
-
-                while cont > 0:
-
-                    pmg1 = leitor("leitor1_in1")
-
-                    if(pmg1 == 0): # Portão ainda aberto                                      
-
-                        time.sleep(1)
-                        cont = cont - 1
-                            
-                    if (pmg1 == 1): # Portão ja fechou
-
-                        log("Portão fechou")
-
-                        s.desliga_rele3_exp1() # Sinal Vermelho
-
-                        t = open("/home/pi/CMM/status_garagem_1.cmm","w")
-                        t.write("0")
-                        t.close()
-                        
-                        cont = 0
-                        mudanca1 = 0
-                        time.sleep(1)
-                        break
-            
-        if pmg1 == 0 and mudanca1 == 0 and status_tx1 == "0": # Violação do portão da garagem                              
+        if mud1 == 1 and em_mudanca == 0:            
 
             cont = 10
-            violacao = 1
+
+            while cont > 0:
+
+                mud1 = leitor("leitor1_in4")
+
+                if mud1 == 0: # Desligou a chave
+
+                    print("ruido")
+                    confirmada_mudanca = 0
+                    cont = 1
+                    break
+
+                if mud1 == 1:
+
+                    confirmada_mudanca = 1
+                    
+                cont = cont - 1
+                time.sleep(0.1)
+
+            mud1 = leitor("leitor1_in4")
+                    
+            if confirmada_mudanca == 1 and mud1 == 1 and em_mudanca == 0: 
+                
+                banco.atualiza("comandos","mudanca","1")
+                print("Atualizado mudança para 1 na tabela")
+                
+                em_mudanca = 1
+            
+                time.sleep(10)
+
+        if mud1 == 0 and em_mudanca == 1 and confirmada_mudanca == 1:
+
+            cont = 10
+
+            while cont > 0:
+
+                mud1 = leitor("leitor1_in4")
+
+                if mud1 == 0: # Desligou a chave
+
+                    print("ruido")
+                    confirmada_desliga_mudanca = 0
+                    cont = 1
+                    break
+
+                if mud1 == 1:
+
+                    confirmada_desliga_mudanca = 1
+                    
+                cont = cont - 1
+                time.sleep(0.1)
+
+            if confirmada_desliga_mudanca == 1:
+            
+                banco.atualiza("comandos","mudanca","0")
+                log("Atualizado mudança para 0 na tabela")
+                
+                em_mudanca = 0
+                confirmada_mudanca = 0
+
+                time.sleep(10)
+            
+            time.sleep(2)
+            
+        if pmg1 == 0 and mudanca == "0": # Violação do portão da garagem                              
+
+            cont = 10
+            violacao = 0
+            time.sleep(1)
             
             while cont > 0:
 
-                t = open("/home/pi/CMM/status_garagem_1.cmm","r")
-                status_tx1 = t.read()
-                t.close() 
-
+                mudanca = banco.consulta("comandos","mudanca")
                 pmg1 = leitor("leitor1_in1")
 
-                if pmg1 == 0 and status_tx1 == "0":
+                if pmg1 == 0 and mudanca == "0":
 
                     violacao = 1
                     
-                if pmg1 == 1:
+                if pmg1 == 1 or mudanca == "1":
                     
-                    violacao = 0
-                    break
+                    violacao = 0                    
+                    cont = 1
 
                 time.sleep(0.1)
                 cont = cont - 1
 
             if violacao == 0: # Filtrou ruido
 
-                pass
-
+                time.sleep(1)
+                
             if violacao == 1:
 
                 log("violação do portão garagem 1")
@@ -1707,9 +1775,9 @@ def Alarmes_garagem_1(Rele):
                 
                 s.desliga_rele4_exp1() # Desliga sirene
 
-##                violacao = 0
+                violacao = 0
                 
-                time.sleep(30)
+                time.sleep(20)
                 
         time.sleep(1)
         
@@ -1840,10 +1908,7 @@ def Buffer():
 
                     enviado = 1                    
                                 
-                except Exception as err: ## Não conseguiu enviar o evento, sem conexão no momento                    
-
-                    s.close()
-
+                except Exception as err: ## Não conseguiu enviar o evento, sem conexão no momento                     
                     time.sleep(10)
                     break
                 
@@ -1858,7 +1923,7 @@ def Buffer():
 
                     try:
 
-                        txt = open("/home/pi/CMM/buffer_eventos.txt","r")
+                        texto = open("/home/pi/CMM/buffer_eventos.txt","r")
                         for l in txt:                        
                             l = l.replace("\n","") # Coloca na lista o evento ja editado
                             lista.append(evento)
@@ -1866,15 +1931,22 @@ def Buffer():
                         # Exclui o item enviado da lista
 
                         for i in lista:
+
+                            try:
                             
-                            if i == evento:
-                                indice = lista.index(i)
-                                txt = ("Excluindo o evento",evento,"posicao",indice)
-                                log(txt)
-                                del(lista[indice])
-                                nova_lista = lista
+                                if i == evento:
+                                    indice = lista.index(i)
+                                    print("indice do evento a excluir",indice)
+                                    txt = ("Excluindo o evento",evento,"posicao",indice)
+                                    log(txt)
+                                    del(lista[indice])
+                                    nova_lista = lista
+
+                            except Exception as err:
+
+                                log(err)
                                 
-                        txt.close()
+                        texto.close()
 
                         # Zera o arquivo buffer
 
@@ -1883,10 +1955,10 @@ def Buffer():
 
                         # Reescreve o texto com a nova lista editada
 
-                        txt = open("/home/pi/CMM/buffer_eventos.txt","a")
+                        texto = open("/home/pi/CMM/buffer_eventos.txt","a")
                         for i in nova_lista:
-                            txt.write(i + "\n")
-                        txt.close()    
+                            texto.write(i + "\n")
+                        texto.close()    
                             
                         enviado = 0
 
@@ -1912,15 +1984,15 @@ arrombamento = threading.Thread(target=Arrombamento, args=(cmm.Rele,))
 servidor = threading.Thread(target=Servidor, args=(cmm.Rele,Abre,))
 buffer = threading.Thread(target=Buffer)
 
-gerenciador = threading.Thread(target=servidor_gerenciador)
+gerenciador = threading.Thread(target=Servidor_qr)
 
 alarmes1 = threading.Thread(target=Alarmes_garagem_1, args=(cmm.Rele,))
 alarmes2 = threading.Thread(target=Alarmes_garagem_1, args=(cmm.Rele,))
 
-qrcode1 = threading.Thread(target=thread_qrcode1)
-qrcode2 = threading.Thread(target=thread_qrcode2)
-qrcode3 = threading.Thread(target=thread_qrcode3)
-qrcode4 = threading.Thread(target=thread_qrcode4)
+##qrcode1 = threading.Thread(target=thread_qrcode1)
+##qrcode2 = threading.Thread(target=thread_qrcode2)
+##qrcode3 = threading.Thread(target=thread_qrcode3)
+##qrcode4 = threading.Thread(target=thread_qrcode4)
 ######################################### Start dos Programas  #############################################################
 
 sociais.start() # Inicia o programa dos portões sociais
@@ -1928,14 +2000,16 @@ garagem1.start() # Inicia o programa do portão de garagem
 ##garagem2.start() # Inicia o programa do portão de garagem
 arrombamento.start() # Inicia o programa de automação
 #servidor.start() 
-buffer.start() # Inicia o programa Buffer
+##buffer.start() # Inicia o programa Buffer
 alarmes1.start() # Inicia a leitura de "interrupções" (chave de mudança garagem1 e arrombamento de portões)
-##alarmes2.start()
+#alarmes2.start()
+
 gerenciador.start()
-qrcode1.start()
-qrcode2.start()
-qrcode3.start()
-qrcode4.start()
+
+##qrcode1.start()
+##qrcode2.start()
+##qrcode3.start()
+##qrcode4.start()
 
 time.sleep(0.2) # Tempo para colocar as linhas impressas após as linhas de inicio de programa
 
