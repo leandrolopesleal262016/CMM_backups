@@ -424,15 +424,15 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                     entradas = cmm.Entradas()
                     pm1 = entradas.pm1
                                         
-                    if pm1 == 0: # Portão fechado pois não abriu com o comando
+##                    if pm1 == 0: # Portão fechado pois não abriu com o comando
+##
+##                        log("Portão Social emperrado")
 
-                        log("Portão Social emperrado")
-
-                        os.system("mpg123 /home/pi/CMM/mp3/social_emperrado.mp3")
-                                                
-                        rele.desliga(5) # Fecha o contato e libera a eclusa para ser acionada
-
-                        evento.enviar("E","132","008") # Envia portão emperrado                        
+##                        os.system("mpg123 /home/pi/CMM/mp3/social_emperrado.mp3")
+##                                                
+##                        rele.desliga(5) # Fecha o contato e libera a eclusa para ser acionada
+##
+##                        evento.enviar("E","132","008") # Envia portão emperrado                        
 
                     if pm1 == 1: # Portão abriu
 
@@ -536,15 +536,15 @@ def Intertravamento(comando): # Inicia a thread dos portoes sociais importando a
                     entradas = cmm.Entradas()
                     pm2 = entradas.pm2
                     
-                    if pm2 == 0: # Portão fechado não abriu após o comando
-
-                       log("Portão eclusa emperrado")
-                       
-                       os.system("mpg123 /home/pi/CMM/mp3/eclusa_emperrado.mp3")
-                            
-                       rele.desliga(6) # Libera o social para abrir mesmo com a eclusa aberta
-
-                       evento.enviar("E","132","009") # Envia portão emperrado
+##                    if pm2 == 0: # Portão fechado não abriu após o comando
+##
+##                       log("Portão eclusa emperrado")
+##                       
+##                       os.system("mpg123 /home/pi/CMM/mp3/eclusa_emperrado.mp3")
+##                            
+##                       rele.desliga(6) # Libera o social para abrir mesmo com a eclusa aberta
+##
+##                       evento.enviar("E","132","009") # Envia portão emperrado
 
                     if pm2 == 1: # Portão aberto
 
@@ -692,7 +692,7 @@ def Portoes_sociais(Rele): # Programa
 
             pm1 = entradas.pm1
 
-            if abre_social == "0" and pm1 == 0: # Se realmente foi um arrombamento liga sirene e notifica o Moni
+            if abre_social == "0" and pm1 == 1: # Se realmente foi um arrombamento liga sirene e notifica o Moni
 
                 log("Confirmado Arrombamento do portão social")
                 os.system("mpg123 /home/pi/CMM/mp3/violacao_social.mp3")
@@ -714,7 +714,7 @@ def Portoes_sociais(Rele): # Programa
 
             pm2 = entradas.pm2
 
-            if abre_eclusa == "0" and pm2 == 0: # Se realmente foi um arrombamento liga sirene e notifica o Moni
+            if abre_eclusa == "0" and pm2 == 1: # Se realmente foi um arrombamento liga sirene e notifica o Moni
 
                 log("Confirmado Arrombamento do portão Eclusa")
                 os.system("mpg123 /home/pi/CMM/mp3/violacao_eclusa.mp3")
@@ -1271,9 +1271,15 @@ def Garagem1(Rele): # Inicia a thread do portão da garagem importando a classe 
                     status.close()
                     
                     pmg1 = leitor("leitor1_in1")
+                    ihm_gar1 = banco.consulta("comandos","abre_garagem")
+                    tx1 =  leitor("leitor1_in3")
 
+                    if (tx1 == 1 or ihm_gar1 == "1"):
+
+                        pass
+                    
                     if pmg1 == 0 and status_garagem == "0":
-
+                        
                         print("violação confirmada do portão garagem 1")
                     
         time.sleep(0.1)
@@ -1591,7 +1597,7 @@ def Alarmes_garagem_1(Rele):
 
         if mud1 == 1 and em_mudanca == 0:            
 
-            cont = 10
+            cont = 5
 
             while cont > 0:
 
@@ -1620,24 +1626,24 @@ def Alarmes_garagem_1(Rele):
                 
                 em_mudanca = 1
             
-                time.sleep(10)
+                time.sleep(5)
 
         if mud1 == 0 and em_mudanca == 1 and confirmada_mudanca == 1:
 
-            cont = 10
+            cont = 5
 
             while cont > 0:
 
                 mud1 = leitor("leitor1_in4")
 
-                if mud1 == 0: # Desligou a chave
+                if mud1 == 1: # Desligou a chave
 
                     print("ruido")
                     confirmada_desliga_mudanca = 0
                     cont = 1
                     break
 
-                if mud1 == 1:
+                if mud1 == 0:
 
                     confirmada_desliga_mudanca = 1
                     
@@ -1647,14 +1653,14 @@ def Alarmes_garagem_1(Rele):
             if confirmada_desliga_mudanca == 1:
             
                 banco.atualiza("comandos","mudanca","0")
-                log("Atualizado mudança para 0 na tabela")
+                print("Atualizado mudança para 0 na tabela")
                 
                 em_mudanca = 0
                 confirmada_mudanca = 0
 
-                time.sleep(10)
+                time.sleep(5)
             
-            time.sleep(2)
+            time.sleep(1)
             
         if pmg1 == 0 and mudanca == "0": # Violação do portão da garagem                              
 
@@ -1713,8 +1719,6 @@ def Alarmes_garagem_1(Rele):
                         t = open("/home/pi/CMM/status_garagem_1.cmm","w")
                         t.write("0")
                         t.close()
-
-
                         
                         cont = 0
                         time.sleep(1)
