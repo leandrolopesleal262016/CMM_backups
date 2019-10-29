@@ -93,20 +93,9 @@ def thread_cadastro():
                         cursor = cnx.cursor()
                 
                           
-                    except mysql.connector.Error as err:
+                    except Exception as err:
                             
-                        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                  
-                            print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-                            
-
-                        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                  
-                            print("Esta base de dados nao existe")
-                           
-                        else:
-                                          
-                            print(err)                           
+                        print(err)                           
                         
                         
                     query = ("SELECT * FROM qrcode")  # Seleciona a tabela qrcode
@@ -131,8 +120,8 @@ def thread_cadastro():
                             df = i[8]
                             ds = i[9]
 
-      			    nome = nome.encode('utf-8')
-			    print("nome vindo banco",nome)
+                            nome = nome.encode('utf-8')
+                            print("nome vindo banco",nome)
                             encontrado = 1
 
                         if encontrado == 1:
@@ -150,7 +139,7 @@ def thread_cadastro():
                                 di = str(di)
                                 df = str(df)
                                 ID = str(ID)
-				ds = str(ds)
+                                ds = str(ds)
 				
                                 arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
                                 arquivo.write(" Evento: Cadastro de QR Code " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
@@ -212,19 +201,9 @@ def thread_cadastro():
                                             cursor = cnx.cursor()
                                     
                                               
-                                        except mysql.connector.Error as err:
+                                        except Exception as err:
                                                 
-                                            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                                      
-                                                print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-                                                
-                                            elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                                      
-                                                print("Esta base de dados nao existe")                                                
-
-                                            else:
-                                                              
-                                                print(err)
+                                            print(err)
                                                 
                                             
                                         query = ("SELECT * FROM qrcode")  # Seleciona a tabela qrcode
@@ -249,7 +228,7 @@ def thread_cadastro():
                                                 df = i[8]
                                                 ds = i[9]
 
-						nome = nome.encode('utf-8')
+                                                nome = nome.encode('utf-8')
                                                 encontrou = 1
 
 
@@ -287,7 +266,7 @@ def thread_cadastro():
                                             cnx.commit()
 
                                                 
-                                        except mysql.connector.Error as err:
+                                        except Exception as err:
 
                                             print("Erro na atualizacao do banco",err)
                                             break
@@ -388,19 +367,9 @@ def thread_cadastro():
                         cursor = cnx.cursor()
                 
                           
-                    except mysql.connector.Error as err:
+                    except Exception as err:
                             
-                        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                  
-                            print("Alguma coisa esta errada com o nome de usuario ou a senha!")                           
-
-                        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                  
-                            print("Esta base de dados nao existe")
-                            
-                        else:
-                                          
-                            print(err)
+                        print(err)
  
                     
                     try:                
@@ -455,21 +424,10 @@ def buffer():
             
             cnx = mysql.connector.connect(user='leandro',database='CMM', password='5510',host='localhost')
             cursor = cnx.cursor()
-
               
-        except mysql.connector.Error as err:
+        except Exception as err:
                 
-            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-      
-                print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-               
-            elif err.errno == errorcode.ER_BAD_DB_ERROR:
-      
-                print("Esta base de dados nao existe")
-               
-            else:
-                              
-                print(err)                
+            print(err)                
       
         encontramos = 0
 
@@ -490,7 +448,7 @@ def buffer():
             ds = i[9]
             enviado = i[10]
 
-	    nome = nome.encode('utf-8')
+            nome = nome.encode('utf-8')
 
             encontramos = 1
 
@@ -513,9 +471,9 @@ def buffer():
                     ds = str(ds)
                     enviado = int(enviado)
                    
-		    print("nome obtido do banco",nome)
-		    nome = nome.encode('utf-8')
-		    print("nome convertido em utf-8",nome)
+                    print("nome obtido do banco",nome)
+                    nome = nome.encode('utf-8')
+                    print("nome convertido em utf-8",nome)
                     cadastro = {"nome": nome, "ID": ID, "apartamento": ap, "bloco": bloco, "condominio": cond, "hora_inicio":hi, "hora_final": hf, "data_inicio": di, "data_final": df, "dias_semana": ds}
                    
                     cnx.close()
@@ -594,19 +552,9 @@ def buffer():
                                     cursor = cnx.cursor()
 
                                       
-                                except mysql.connector.Error as err:
+                                except Exception as err:
                                         
-                                    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                              
-                                        print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-                                       
-                                    elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                              
-                                        print("Esta base de dados nao existe")
-                                       
-                                    else:
-                                                      
-                                        print(err)
+                                    print(err)
                                        
                                 else:
 
@@ -615,7 +563,7 @@ def buffer():
                                     cnx.commit()
 
                                     
-                            except mysql.connector.Error as err:
+                            except Exception as err:
 
                                 print("Erro na atualizacao do valor no campo 'enviado'",err)
                                 
@@ -644,19 +592,9 @@ def buffer():
             cursor = cnx.cursor()
 
               
-        except mysql.connector.Error as err:
+        except Exception as err:
                 
-            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-      
-                print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-                
-            elif err.errno == errorcode.ER_BAD_DB_ERROR:
-      
-                print("Esta base de dados nao existe")
-                
-            else:
-                              
-                print(err)            
+            print(err)            
       
         achou = 0
 
@@ -753,19 +691,9 @@ def buffer():
                                     cursor = cnx.cursor()
 
                                       
-                                except mysql.connector.Error as err:
+                                except Exception as err:
                                         
-                                    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                              
-                                        print("Alguma coisa esta errada com o nome de usuario ou a senha!")
-                                       
-                                    elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                              
-                                        print("Esta base de dados nao existe")
-                                        
-                                    else:
-                                                      
-                                        print(err)
+                                    print(err)
                                         
                                 else:
 
@@ -774,7 +702,7 @@ def buffer():
                                     cnx.commit()
 
                                     
-                            except mysql.connector.Error as err:
+                            except Exception as err:
 
                                 print("Erro na atualizacao do valor no campo 'enviado'",err)
                                 

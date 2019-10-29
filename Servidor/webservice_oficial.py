@@ -13,7 +13,7 @@ from pyramid.view import view_config
 from pyramid.config import Configurator
 
 
-host = '0.0.0.0'
+host = '10.10.0.7'
 port = 5050
 
 hs = time.strftime("%H:%M:%S") # Hora completa para registro de Log
@@ -439,14 +439,12 @@ def qrCodes(request):
                   
                     print(err)
             try:
-                
-            
-                query = ("UPDATE qrcode SET nome = %s, apartamento = %s, bloco = %s, cond = %s, hora_inicio = %s, hora_final = %s, data_inicio = %s, data_final = %s, dias_semana = %s WHERE ID = %s")
-		print("Id sendo atualizado no banco ",ID)
+
+                query=("UPDATE qrcode SET nome = %s,apartamento = %s,bloco = %s,cond = %s,hora_inicio = %s,hora_final = %s,data_inicio = %s,data_final = %s,dias_semana = %s WHERE ID = %s")
+                print("Id sendo atualizado no banco",ID)
                 query_data = (nome,ap,bloco,cond,hi,hf,di,df,ds,ID)
                 cursor.execute(query, query_data)
                 cnx.commit()
-
                 
             except mysql.connector.Error as err:
 
