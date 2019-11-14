@@ -39,7 +39,7 @@ def log(texto): # Metodo para registro dos eventos no log.txt (exibido na interf
     escrita = ("{} - {}  Evento:  {}\n").format(data, hs, texto)
     escrita = str(escrita)
 
-    l = open("/var/www/html/log.txt","a")
+    l = open("/var/www/html/log/log.txt","a")
     l.write(escrita)
     l.close()
     
@@ -3576,7 +3576,7 @@ servidor = threading.Thread(target=Servidor, args=(Rele,Abre,))
 buffer = threading.Thread(target=Buffer)
 
 alarmes1 = threading.Thread(target=Alarmes_garagem_1, args=(Rele,))
-alarmes2 = threading.Thread(target=Alarmes_garagem_1, args=(Rele,))
+alarmes2 = threading.Thread(target=Alarmes_garagem_2, args=(Rele,))
 
 
 ######################################### Start dos Programas  #############################################################
