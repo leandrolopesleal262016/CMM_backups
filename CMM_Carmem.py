@@ -1247,7 +1247,7 @@ def Arrombamento(Rele): # Inicia a thread arrombamento de portões
         entradas = Entradas()
 
         pm1 = entradas.pm1
-        pm2 = entradas.pm2
+##        pm2 = entradas.pm2
 
         a = open("/home/pi/CMM/status_social.cmm","r")
         abre_social = a.read()
@@ -1259,12 +1259,14 @@ def Arrombamento(Rele): # Inicia a thread arrombamento de portões
                 
         if pm1 == 1 and ar1 == 0:
 
-            time.sleep(1) # Filtra algum possivel ruido de até 1 segundo
+            time.sleep(2) # Filtra algum possivel ruido de até 1 segundo
+            
             a = open("/home/pi/CMM/status_social.cmm","r")
             abre_social = a.read()
             a.close()
+            pm1 = entradas.pm1
 
-            if abre_social == "0": #pm1 == 1: # Se realmente foi um arrombamento liga sirene e notifica o Moni
+            if abre_social == "0" and pm1 == 1: # Se realmente foi um arrombamento liga sirene e notifica o Moni
 
                 log("Arrombamento do portão social")
                 os.system("mpg123 /home/pi/CMM/mp3/violacao_social.mp3")
@@ -1288,7 +1290,7 @@ def Arrombamento(Rele): # Inicia a thread arrombamento de portões
                 reset_ar1 = 0
                 rele.desliga(8)
 
-                
+        time.sleep(2)       
 
 ##        if pm2 == 1 and ar2 == 0:
 ##
@@ -2211,7 +2213,7 @@ qrcode2 = threading.Thread(target=thread_qrcode2)
 ######################################### Start dos Programas  #############################################################
 
 sociais.start() # Inicia o programa dos portões sociais
-arrombamento.start() # Inicia o programa de automação
+##arrombamento.start() # Inicia o programa de automação
 servidor.start() # Inicia o programa de automação
 buffer.start() # Inicia o programa Buffer
 

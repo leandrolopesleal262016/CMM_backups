@@ -133,18 +133,37 @@ qr2_garagem = cmm.Qrcode("172.19.1.243","0001",5,"garagem_saida","0") # IP,Clien
 
 def thread_qrcode_garagem_1(): # Programa que mantem a conexão com o QR Code
 
-    log("Programa QR Code Garagem entrada em execução")
+    
+    while(1):
+        
+        try:
 
-    qr1_garagem.start() # Conecta com o leitor dentro da classe do QR Code
+            log("Programa QR Code Garagem entrada em execução")
+            qr1_garagem.start() # Conecta com o leitor dentro da classe do QR Code
+            
+
+        except:
+
+            log("Aguardando 5 segundos para tentar reconectar com leitor 1...")
+            time.sleep(5)
 
 qr_garagem_entrada = threading.Thread(target=thread_qrcode_garagem_1)
 qr_garagem_entrada.start()
 
 def thread_qrcode_garagem_2(): # Programa que mantem a conexão com o QR Code
 
-    log("Programa QR Code Garagem saida em execução")
+    while(1):
+        
+        try:
 
-    qr2_garagem.start() # Conecta com o leitor dentro da classe do QR Code
+            log("Programa QR Code Garagem saida em execução")
+            qr2_garagem.start() # Conecta com o leitor dentro da classe do QR Code
+            
+
+        except:
+
+            log("Aguardando 5 segundos para tentar reconectar com leitor 2...")
+            time.sleep(5)
 
 qr_garagem_saida = threading.Thread(target=thread_qrcode_garagem_2)
 qr_garagem_saida.start()
@@ -489,6 +508,22 @@ time.sleep(0.2) # Tempo para colocar as linhas impressas após as linhas de inic
 
 txt = ("Temperatura do processador " + str(temperatura.cpu()) + "°C")  # obter temperatura
 log(txt)
+
+while(1):
+
+    reset = banco.consulta("comandos","reset")
+
+    if reset == "1":
+
+        log("*")
+        log("Acionado o botão de Reset da interface gráfica, aguarde reiniciando... ")
+        log("*")
+        
+        banco.atualiza("comandos","reset","0")
+
+        os.system("sudo reboot now")
+
+    time.sleep(3)
 
 
 
