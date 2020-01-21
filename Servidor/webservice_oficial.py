@@ -13,18 +13,31 @@ from pyramid.view import view_config
 from pyramid.config import Configurator
 
 
-host = '10.10.0.7'
+host = '0.0.0.0'
 port = 5050
 
 hs = time.strftime("%H:%M:%S") # Hora completa para registro de Log
 
+def log(texto): # Metodo para registro dos eventos no log.txt (exibido na interface grafica)
+
+    hs = time.strftime("%H:%M:%S") 
+    data = time.strftime('%d/%m/%y')
+
+    texto = str(texto)
+
+    escrita = ("{} - {}  Evento:  {}\n").format(data, hs, texto)
+    escrita = str(escrita)
+
+    l = open("/var/www/html/log/log.txt","a")
+    l.write(escrita)
+    l.close()
 
 def timeout(signum, frame):
 
     print ("Excedeu o tempo esperado")
     
 
-print("Iniciou o webservice")
+log("Iniciou o webservice")
 
 @view_config(route_name='iterar', renderer='json',request_method='GET')
 @view_config(route_name='iterar', renderer='json',request_method='DELETE')
@@ -128,7 +141,7 @@ def iterar(request):
                 encontrou = 0
                 inexistente = 0
 
-                return {ID_recebido:"deletado"}
+                return {"ok":ID}
 
                 
             
@@ -284,7 +297,7 @@ def qrCodes(request):
             ds = dados_json["dias_semana"]
 	    
  	    
-           #print("Imprimindo pelo dicionario",ID,nome,ap,bloco,cond,di,df,hi,hf,ds)
+            print("Recebido do condfy para cadastro",ID,nome,ap,bloco,cond,di,df,hi,hf,ds)
 
         except Exception as err:
 
@@ -439,12 +452,14 @@ def qrCodes(request):
                   
                     print(err)
             try:
-
-                query=("UPDATE qrcode SET nome = %s,apartamento = %s,bloco = %s,cond = %s,hora_inicio = %s,hora_final = %s,data_inicio = %s,data_final = %s,dias_semana = %s WHERE ID = %s")
-                print("Id sendo atualizado no banco",ID)
+                
+            
+                query = ("UPDATE qrcode SET nome = %s, apartamento = %s, bloco = %s, cond = %s, hora_inicio = %s, hora_final = %s, data_inicio = %s, data_final = %s, dias_semana = %s WHERE ID = %s")
+		print("Id sendo atualizado no banco ",ID)
                 query_data = (nome,ap,bloco,cond,hi,hf,di,df,ds,ID)
                 cursor.execute(query, query_data)
                 cnx.commit()
+
                 
             except mysql.connector.Error as err:
 
@@ -770,7 +785,7 @@ def itera(request):
                 encontrou = 0
                 inexistente = 0
 
-                return {ID_recebido:"deletado"}
+                return ("ok")
          
             
         finally:

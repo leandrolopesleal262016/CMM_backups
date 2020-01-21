@@ -14,8 +14,31 @@ from wsgiref.simple_server import make_server
 from pyramid.view import view_config
 from pyramid.config import Configurator
 
+def log(texto): # Metodo para registro dos eventos no log.txt (exibido na interface grafica)
 
-print("Iniciou o Gerenciador\n")
+    try:
+
+        hs = time.strftime("%H:%M:%S") 
+        data = time.strftime('%d/%m/%y')
+
+        texto = str(texto)
+
+        escrita = ("{} - {}  Evento:  {}\n").format(data, hs, texto)
+        escrita = str(escrita)
+
+        l = open("/var/www/html/log/log.txt","a")
+        l.write(escrita)
+        l.close()
+
+    except Exception as err:
+
+        l = open("/var/www/html/log.txt","a")
+        l.write("Erro na escrita do log")
+        l.close()
+
+
+log("Iniciou o Gerenciador")
+print("Em exucucao...visualizar log na interface grafica")
 
 hs = time.strftime("%H:%M:%S") # Hora completa para registro de Log
 
@@ -38,7 +61,8 @@ def thread_cadastro():
     host = '0.0.0.0'
     port = 5050
 
-    print("Servidor cadastro:",host,"porta:",port)
+    txt = ("Servidor cadastro:",host,"porta:",port)
+    log(txt)
 
    
     def setupServer():
@@ -48,13 +72,14 @@ def thread_cadastro():
         try:
             s.bind((host, port))
         except socket.error as msg:
-            print (msg)
+            log(msg)
         return s
 
     def setupConnection():
         s.listen(5)
         conn, address = s.accept()
-        print ("Conectado com: " + address[0] + ":" + str(address[1]), "\n")
+        txt =  ("Conectado com: " + address[0] + ":" + str(address[1]))
+        log(txt)
         return conn
 
 
@@ -67,7 +92,8 @@ def thread_cadastro():
             data = conn.recv(1024)  # Recebe os dados
             data = data.decode('utf-8')
 
-            print("Dados recebidos do webservice",data)
+            txt = ("Dados recebidos do webservice",data)
+	    log(txt)
             
             op = str(data.split(":")[0])
             ID_recebido = str(data.split(":")[1])  # ID do QR CODE
@@ -79,13 +105,13 @@ def thread_cadastro():
             
             if(op == "cadastrar_qr"): # Busca pelo ID no banco de dados e envia pro CMM correspondente
 
-                print("\nreconheceu cadastrar\n")
+                log("reconheceu cadastrar")
                
                 cadastrar_ID = 1
                 
                 try:
 
-                    print ("\nCadastrando no CMM...\n")
+                    log("Cadastrando no CMM...")
 
                     try:  # Tenta conectar com o banco de dados
         
@@ -93,9 +119,20 @@ def thread_cadastro():
                         cursor = cnx.cursor()
                 
                           
-                    except Exception as err:
+                    except mysql.connector.Error as err:
                             
-                        print(err)                           
+                        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                  
+                            log("Alguma coisa esta errada com o nome de usuario ou a senha!")
+                            
+
+                        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                  
+                            log("Esta base de dados nao existe")
+                           
+                        else:
+                                          
+                            log(err)                           
                         
                         
                     query = ("SELECT * FROM qrcode")  # Seleciona a tabela qrcode
@@ -120,17 +157,19 @@ def thread_cadastro():
                             df = i[8]
                             ds = i[9]
 
-                            nome = nome.encode('utf-8')
-                            print("nome vindo banco",nome)
+      			    #nome = nome.encode('utf-8')
+			    txt = ("nome vindo banco",nome)
+			    log(txt)
                             encontrado = 1
 
                         if encontrado == 1:
 
-                            print("Encontrou o id recebido no Banco de Dados")
+                            #log("Encontrou o id recebido no Banco de Dados")
                             
                             try:
 
-                                nome = nome.encode('utf-8')
+                                #nome = nome.encode('utf-8')
+				nome = str(nome)
                                 ap = str(ap)
                                 bloco = str(bloco)
                                 cond = str(cond)
@@ -139,10 +178,10 @@ def thread_cadastro():
                                 di = str(di)
                                 df = str(df)
                                 ID = str(ID)
-                                ds = str(ds)
+				ds = str(ds)
 				
                                 arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
-                                arquivo.write(" Evento: Cadastro de QR Code " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
+                                arquivo.write(" Evento: Cadastro de QR Code " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs)
                                 arquivo.close()
 
                                 cadastro = {"nome": nome, "ID": ID, "apartamento": ap, "bloco": bloco, "condominio": cond, "hora_inicio":hi, "hora_final": hf, "data_inicio": di, "data_final": df, "dias_semana": ds}
@@ -154,162 +193,54 @@ def thread_cadastro():
                                 try:
 
                                     numero = cond
-                                    cliente = _cliente(numero) # insatancia a lista de enderecos externa
+                                    cliente = _cliente(numero) # instancia a lista de enderecos externa
 
                                     condominio = (cliente[0])
                                     ID_correspondente = (cliente[1])
 
-                                    print(condominio,ID_correspondente)
+                                    txt = (condominio,ID_correspondente)
+				    log(txt)
+				    encontrado = 0
 
                                 except Exception as e:
 
-                                    print("Nao encontrou o cliente correspondente na lista")
-                                    
-
-                                else:  ########## CRIA WEBSOCKET E ENVIA OS DADOS PARA O CMM CORRESPONDENTE ########
-
-                                    try:
-
-                                        host = ID_correspondente
-                                        port = 5511
-                                           
-                                        print("\nEnviando requisicao para o CMM\n")
-                                        
-                                        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                        s.connect ((host,port))
-
-                                        cadastro = str(cadastro)
-					
-                                        command = ("cadastrar_qr&" + cadastro) # Dados a serem enviados para o CLP correspondente
-                                        
-                                        s.send(str.encode(command))
-                                        
-                                        reply = s.recv(1024)
-                                        print(reply.decode('utf-8'))
-                                        
-                                        s.close()
-                                                      
-                                    except Exception as e:
-                                        
-                                        print("\nNao conseguiu enviar para o CMM\n", e)
-
-                                    else:
-
-                                        try:  # Tenta conectar novamente com o banco de dados
-        
-                                            cnx = mysql.connector.connect(user='leandro',database='CMM', password='5510',host='localhost')
-                                            cursor = cnx.cursor()
-                                    
-                                              
-                                        except Exception as err:
-                                                
-                                            print(err)
-                                                
-                                            
-                                        query = ("SELECT * FROM qrcode")  # Seleciona a tabela qrcode
-                                        cursor.execute(query)
-
-                                        encontrou = 0
-                                                            
-                                        for i in cursor: 
-                                            
-                                            ID = i[0] # Seleciona o primeiro item da lista recebida do banco (ID)                                            
-
-                                            if (ID_recebido == ID): # Compara se o ID vindo do request e igual ao do banco   
-
-                                                               
-                                                nome = i[1]
-                                                ap = i[2]
-                                                bloco = i[3]
-                                                cond = i[4]
-                                                hi = i[5]
-                                                hf = i[6]
-                                                di = i[7]
-                                                df = i[8]
-                                                ds = i[9]
-
-                                                nome = nome.encode('utf-8')
-                                                encontrou = 1
-
-
-                                            if encontrou == 1:
-
-                                                print("Encontrou o id recebido no Banco de Dados")
-                                                
-                                                try:
-
-                                                    nome = nome.encode('utf-8')
-                                                    ap = str(ap)
-                                                    bloco = str(bloco)
-                                                    cond = str(cond)
-                                                    hi = str(hi)
-                                                    hf = str(hf)
-                                                    di = str(di)
-                                                    df = str(df)
-                                                    ID = str(ID)
-                                                    ds = str(ds)
-                                                    
-                                                    arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
-                                                    arquivo.write(" Evento: Cadastro de QR Code " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
-                                                    arquivo.close()
-
-                                                    cadastro = {"nome": nome, "ID": ID, "apartamento": ap, "bloco": bloco, "condominio": cond, "hora_inicio":hi, "hora_final": hf, "data_inicio": di, "data_final": df, "dias_semana": ds}
-
-                                                except:
-
-                                                    print("Erro na divisao da string")
-
-                                        try:
-
-                                            query = ("UPDATE qrcode SET enviado = 1 WHERE ID = %s") %ID 
-                                            cursor.execute(query)
-                                            cnx.commit()
-
-                                                
-                                        except Exception as err:
-
-                                            print("Erro na atualizacao do banco",err)
-                                            break
-                                                
-
-                                        else:
-
-                                            print("\nAtualizado campo 'enviado' para 1\n")
-
-                                            cnx.close()
-                                            break
-           
+                                    txt = ("Cadastro: Nao encontrou o cliente correspondente na lista",e)
+				    log(txt)
+				                                   
                             except Exception as e:
 
-                                print (e)
-                                encontrou = 0
+                                log(e)
+                                encontrado = 0
                 
                 
                 except Exception as e:
 
-                    print ("\nNao conseguiu cadastrar\n",e)
+                    txt =  ("Nao conseguiu cadastrar",e)
+		    log(txt)
                     
                 break
             
             if (op == "deletar_qr"):
 
-                print("\nreconheceu deletar\n")
+                log("reconheceu deletar")
 
                 deletar_ID = 1
      
                 try:
 
-                    print("Dados recebidos no delete",data)
+                    txt = ("Dados recebidos no delete",data)
+		    log(txt)
 
                     op = str(data.split(":")[0])
                     ID_recebido = str(data.split(":")[1])                    
                     cond = str(data.split(":")[2])
 
-                    print("ID_recebido",ID_recebido,"cond",cond)
+                    txt = ("ID_recebido",ID_recebido,"cond",cond)
+		    log(txt)
 
                 except:
 
-                    print("Nao conseguiu dividir a string do delete")
+                    log("Nao conseguiu dividir a string do delete")
 
                 ####### VERIFICA O CMM CORRESPONDENTE #########
 
@@ -321,12 +252,13 @@ def thread_cadastro():
                     condominio = (cliente[0])
                     ID_correspondente = (cliente[1])
 
-                    print("Condominio",condominio,"ID",ID_correspondente)
+                    txt = ("Condominio",condominio,"ID",ID_correspondente)
+		    log(txt)
 
                 except Exception as e:
 
-                    print("\nNao encontrou o cliente na lista\n",e)
-
+                    txt = ("Nao encontrou o cliente na lista",e)
+		    log(txt)
                 
 
 ##                ########## CRIA WEBSOCKET E ENVIA OS DADOS PARA O CMM CORRESPONDENTE ########
@@ -337,7 +269,8 @@ def thread_cadastro():
                     host = ID_correspondente
                     port = 5511
                                
-                    print("\nEnviando requisicao %s para o CMM\n")%op
+                    txt = ("Enviando requisicao %s para o CMM")%op
+		    log(txt)
                     
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.connect ((host,port))
@@ -351,15 +284,17 @@ def thread_cadastro():
                     s.send(str.encode(command))
                     
                     reply = s.recv(1024)
-                    print(reply.decode('utf-8'))
+                    txt = (reply.decode('utf-8'))
+		    log(txt)
 
                     s.close()
                                   
                 except Exception as e:
 
-                    print("\nNao conseguiu enviar para o CMM\n", e)
+                    txt = ("Nao conseguiu enviar para o CMM", e)
+		    log(txt)
 
-                    print("Colocando no buffer delete...")
+                    log("Colocando no buffer delete...")
 
                     try:  # Tenta conectar novamente com o banco de dados
         
@@ -367,9 +302,19 @@ def thread_cadastro():
                         cursor = cnx.cursor()
                 
                           
-                    except Exception as err:
+                    except mysql.connector.Error as err:
                             
-                        print(err)
+                        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                  
+                            log("Alguma coisa esta errada com o nome de usuario ou a senha!")                           
+
+                        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                  
+                            log("Esta base de dados nao existe")
+                            
+                        else:
+                                          
+                            log(err)
  
                     
                     try:                
@@ -382,12 +327,14 @@ def thread_cadastro():
                 
                     except Exception as err: # mysql.connector.Error as err:
 
-                        print("Erro na inclusao do banco",err)                        
+                        txt = ("Erro na inclusao do banco",err)
+			log(txt)                        
 
 
                     else:
 
-                        print("\nIncluido na tabela delete\n")
+                        log("Incluido na tabela delete")
+			log(txt)
 
                         ID = str(ID_recebido)
 
@@ -398,7 +345,8 @@ def thread_cadastro():
 
     while True:
       
-      print ("\nGERENCIADOR ESCUTANDO NA PORTA",port, "\n")
+      txt = ("GERENCIADOR ESCUTANDO NA PORTA",port)
+      log(txt)
       
       try:
 
@@ -408,7 +356,7 @@ def thread_cadastro():
             
       except Exception as e:
         
-          print("Encerrou conexao Gerenciador CMM")
+          log("Encerrou conexao Gerenciador CMM")
 
 ####################################  Thread Buffer  ########################################
 
@@ -424,10 +372,21 @@ def buffer():
             
             cnx = mysql.connector.connect(user='leandro',database='CMM', password='5510',host='localhost')
             cursor = cnx.cursor()
+
               
-        except Exception as err:
+        except mysql.connector.Error as err:
                 
-            print(err)                
+            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+      
+                log("Alguma coisa esta errada com o nome de usuario ou a senha!")
+               
+            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+      
+                log("Esta base de dados nao existe")
+               
+            else:
+                              
+                log(err)                
       
         encontramos = 0
 
@@ -448,17 +407,20 @@ def buffer():
             ds = i[9]
             enviado = i[10]
 
-            nome = nome.encode('utf-8')
+	    nome = nome.encode('utf-8')
+	
+	    if enviado == 0:
 
-            encontramos = 1
-
+                encontramos = 1
 
             if encontramos == 1:
 
-                print("\nEncontrou na tabela qrcode cadastro ainda nao enviado")
+                log("Encontrou na tabela qrcode cadastro ainda nao enviado")
+
+		encontramos = 0
                 
                 try:
-
+		    
                     nome = str(nome)
                     ap = str(ap)
                     bloco = str(bloco)
@@ -471,9 +433,13 @@ def buffer():
                     ds = str(ds)
                     enviado = int(enviado)
                    
-                    print("nome obtido do banco",nome)
-                    nome = nome.encode('utf-8')
-                    print("nome convertido em utf-8",nome)
+		    txt = ("nome obtido do banco",nome)
+		    log(txt)		    
+		    
+		    nome = str(nome)
+
+		    #txt = ("nome convertido em utf-8",nome)
+		    #log(txt)
                     cadastro = {"nome": nome, "ID": ID, "apartamento": ap, "bloco": bloco, "condominio": cond, "hora_inicio":hi, "hora_final": hf, "data_inicio": di, "data_final": df, "dias_semana": ds}
                    
                     cnx.close()
@@ -482,26 +448,30 @@ def buffer():
 
                     try:
 
+			txt = ("Numero do cliente recebido do condfy",cond)
+			log(txt)
+
                         numero = cond
                         cliente = _cliente(numero) # insatancia a lista de enderecos externa
 
                         condominio = (cliente[0])
                         ID_correspondente = (cliente[1])
 
-                        print("\nCondominio " + condominio + " IP " +  ID_correspondente + " " + nome + " Ap " + ap + " " + bloco)
+                        txt = ("Condominio " + condominio + " IP " +  ID_correspondente + " " + nome + " Ap " + ap + " " + bloco)
+			log(txt)
 
                     except Exception as e:
 
                         if ID == ID_1:
 
-                            pass  #print("Ja registrou cliente nao consta na lista")
+                            pass  #log("Ja registrou cliente nao consta na lista")
                             
                         else:
 
-                            print("Nao encontrou o cliente correspondente na lista")
+                            log("Buffer: Nao encontrou o cliente correspondente na lista")
 
                             arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
-                            arquivo.write(" Evento: Nao encontrou cliente na lista " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
+                            arquivo.write(" Evento: Nao encontrou cliente na lista " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs)
                             arquivo.close()
 
                             ID_1 = ID
@@ -515,7 +485,7 @@ def buffer():
                             host = ID_correspondente
                             port = 5511
                                
-                            print("\nEnviando item atraves do buffer para o cliente...\n")
+                            log("Enviando item atraves do buffer para o cliente...")
                             
                             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                             s.connect ((host,port))
@@ -527,21 +497,23 @@ def buffer():
                             s.send(str.encode(command))
                             
                             reply = s.recv(1024)
-                            print(reply.decode('utf-8'))
+                            txt = (reply.decode('utf-8'))
+			    log(txt)
                             
                             s.close()
                                           
                         except Exception as e:
                             
-                            print("\nNao conseguiu enviar para o CMM\n", e)
-
+                            txt = ("Nao conseguiu enviar para o CMM", e)
+			    log(txt)
                             
                         else:
 
-                            print("Enviado evento pelo buffer",hs)
+                            txt = ("Enviado evento pelo buffer",hs)
+			    log(txt)
 
                             arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
-                            arquivo.write(" Evento: Enviado evento para o cliente pelo buffer " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
+                            arquivo.write(" Evento: Enviado evento para o cliente pelo buffer " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs)
                             arquivo.close()
                             
                             try:
@@ -552,9 +524,19 @@ def buffer():
                                     cursor = cnx.cursor()
 
                                       
-                                except Exception as err:
+                                except mysql.connector.Error as err:
                                         
-                                    print(err)
+                                    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                              
+                                        log("Alguma coisa esta errada com o nome de usuario ou a senha!")
+                                       
+                                    elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                              
+                                        log("Esta base de dados nao existe")
+                                       
+                                    else:
+                                                      
+                                        log(err)
                                        
                                 else:
 
@@ -563,15 +545,17 @@ def buffer():
                                     cnx.commit()
 
                                     
-                            except Exception as err:
+                            except mysql.connector.Error as err:
 
-                                print("Erro na atualizacao do valor no campo 'enviado'",err)
+                                txt = ("Erro na atualizacao do valor no campo 'enviado'",err)
+				log(txt)
                                 
                                 break
                                
                             else:
 
-                                print("\nAtualizado campo 'enviado' para 1\n")
+                                log("Atualizado campo 'enviado' para 1")
+				log(txt)
 
                                 cnx.close()
 
@@ -579,9 +563,10 @@ def buffer():
                                 
                 except Exception as e:
 
-                    print(e)
+                    log(e)
                     break
 
+	
 ##############################################  Buffer Delete  ##########################################
                 
         hs = time.strftime("%H:%M:%S") # Hora completa para registro de Log
@@ -592,9 +577,19 @@ def buffer():
             cursor = cnx.cursor()
 
               
-        except Exception as err:
+        except mysql.connector.Error as err:
                 
-            print(err)            
+            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+      
+                log("Alguma coisa esta errada com o nome de usuario ou a senha!")
+                
+            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+      
+                log("Esta base de dados nao existe")
+                
+            else:
+                              
+                log(err)            
       
         achou = 0
 
@@ -610,7 +605,7 @@ def buffer():
 
             if achou == 1:
 
-                print("\nEncontrou na tabela delete_buffer item nao enviado")
+                log("Encontrou na tabela delete_buffer item nao enviado")
                 
                 try:
                     
@@ -631,20 +626,21 @@ def buffer():
                         condominio = (cliente[0])
                         ID_correspondente = (cliente[1])
                        
-                        print("\nCondominio " + condominio + " IP " +  ID_correspondente)
+                        txt = ("Condominio " + condominio + " IP " +  ID_correspondente)
+			log(txt)
 
                     except Exception as e:
 
                         if ID == ID_1:
 
-                            pass  #print("Ja registrou cliente nao consta na lista")
+                            pass  #log("Ja registrou cliente nao consta na lista")
                             
                         else:
 
-                            print("Nao encontrou o cliente correspondente na lista")
+                            log("Delete Nao encontrou o cliente correspondente na lista")
 
                             arquivo = open("/home/clp/qrcodes.log", "a+") # Escreve o evento no registro de acesso de moradores
-                            arquivo.write(" Evento: Nao encontrou cliente na lista " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs + "\n")
+                            arquivo.write(" Evento: Nao encontrou cliente na lista " + nome + " " + ID + " ap" + ap + " bloco" + bloco + " " + hs)
                             arquivo.close()
 
                             ID_1 = ID
@@ -658,7 +654,7 @@ def buffer():
                             host = ID_correspondente
                             port = 5511
                               
-                            print("\nEnviando delete atraves do buffer para o cliente...\n")
+                            log("Enviando delete atraves do buffer para o cliente...")
                             
                             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                             s.connect ((host,port))
@@ -671,14 +667,15 @@ def buffer():
                             s.send(str.encode(command))
                             
                             reply = s.recv(1024)
-                            print(reply.decode('utf-8'))
+                            txt = (reply.decode('utf-8'))
+			    log(txt)
                             
                             s.close()
                             
                         except Exception as e:
                             
-                            print("\nNao conseguiu enviar delete para o cliente\n", e)
-
+                            txt = ("Nao conseguiu enviar delete para o cliente", e)
+			    log(txt)
                             
                         else:
 
@@ -691,9 +688,19 @@ def buffer():
                                     cursor = cnx.cursor()
 
                                       
-                                except Exception as err:
+                                except mysql.connector.Error as err:
                                         
-                                    print(err)
+                                    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                              
+                                        log("Alguma coisa esta errada com o nome de usuario ou a senha!")
+                                       
+                                    elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                              
+                                        log("Esta base de dados nao existe")
+                                        
+                                    else:
+                                                      
+                                        log(err)
                                         
                                 else:
 
@@ -702,16 +709,18 @@ def buffer():
                                     cnx.commit()
 
                                     
-                            except Exception as err:
+                            except mysql.connector.Error as err:
 
-                                print("Erro na atualizacao do valor no campo 'enviado'",err)
+                                txt = ("Erro na atualizacao do valor no campo 'enviado'",err)
+				log(txt)
                                 
                                 break
                                                        
 
                             else:
 
-                                print("\nAtualizado campo 'enviado' para 1\n")
+                                log("Atualizado campo 'enviado' para 1")
+				log(txt)
 
                                 cnx.close()
 
@@ -720,10 +729,10 @@ def buffer():
                                
                 except Exception as e:
 
-                    print(e)
+                    log(e)
                     break
                 
-        time.sleep(30)                                
+        time.sleep(5)                                
 
 
 
